@@ -24,7 +24,10 @@ export async function addTransaction(data: TransactionFormValues) {
   // ── Budget enforcement (expenses only) ─────────────────────────────────
   if (parsed.data.type === "expense") {
     const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    // IST start of month (UTC+5:30)
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+    const nowIST = new Date(now.getTime() + IST_OFFSET_MS)
+    const startOfMonth = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1) - IST_OFFSET_MS).toISOString()
 
     const { data: budget } = await supabase
       .from("budgets")

@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { format } from "date-fns"
 import * as LucideIcons from "lucide-react"
 
 type Transaction = {
@@ -80,7 +79,12 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
-                {format(new Date(transaction.date), "MMM d, yyyy")}
+                {new Date(transaction.date).toLocaleString("en-IN", {
+                  timeZone: "Asia/Kolkata",
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
               </TableCell>
               <TableCell className="max-w-[200px] truncate text-muted-foreground text-sm hidden md:table-cell">
                 {transaction.notes || "-"}

@@ -43,11 +43,16 @@ export async function getSpendingInsights(): Promise<{
   if (!user) return { insights: [], hasEnoughData: false }
 
   const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth()
+  // IST offset (UTC+5:30)
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const nowIST = new Date(now.getTime() + IST_OFFSET_MS)
+  const currentYear = nowIST.getUTCFullYear()
+  const currentMonth = nowIST.getUTCMonth()
 
-  // Date range: 2 months of data
-  const twoMonthsAgo = new Date(currentYear, currentMonth - 1, 1).toISOString()
+  // Date range: 2 months of data — use IST-based start of prev month converted to UTC
+  const prevMonthYear  = currentMonth === 0 ? currentYear - 1 : currentYear
+  const prevMonthIndex = currentMonth === 0 ? 11 : currentMonth - 1
+  const twoMonthsAgo = new Date(Date.UTC(prevMonthYear, prevMonthIndex, 1) - IST_OFFSET_MS).toISOString()
 
   const [{ data: transactions }, { data: budgets }] = await Promise.all([
     supabase
@@ -67,9 +72,10 @@ export async function getSpendingInsights(): Promise<{
   }
 
   // ── Group expenses by category for current & previous month ─────────────
-  const currentStart = new Date(currentYear, currentMonth, 1)
-  const prevStart    = new Date(currentYear, currentMonth - 1, 1)
-  const prevEnd      = new Date(currentYear, currentMonth, 0)  // last day of prev month
+  // Use IST-based month boundaries
+  const currentStart = new Date(Date.UTC(currentYear, currentMonth, 1) - IST_OFFSET_MS)
+  const prevStart    = new Date(Date.UTC(prevMonthYear, prevMonthIndex, 1) - IST_OFFSET_MS)
+  const prevEnd      = new Date(Date.UTC(currentYear, currentMonth, 1) - IST_OFFSET_MS - 1)  // last ms of prev IST month
 
   type CatEntry = { name: string; current: number; previous: number }
   const catMap: Record<string, CatEntry> = {}
@@ -90,9 +96,9 @@ export async function getSpendingInsights(): Promise<{
     }
   }
 
-  // ── How many days into the current month are we? (for projection) ───────
-  const daysInMonth   = new Date(currentYear, currentMonth + 1, 0).getDate()
-  const daysPassed    = now.getDate()
+  // ── How many days into the current IST month are we? (for projection) ───
+  const daysInMonth   = new Date(Date.UTC(currentYear, currentMonth + 1, 1) - 1).getUTCDate()
+  const daysPassed    = nowIST.getUTCDate()
   const projFactor    = daysInMonth / Math.max(daysPassed, 1)
 
   // ── Build budget map ─────────────────────────────────────────────────────

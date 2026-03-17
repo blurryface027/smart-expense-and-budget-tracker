@@ -4,7 +4,6 @@ import { getDashboardStats } from "@/lib/actions/dashboard"
 import { getTransactions } from "@/lib/actions/transactions"
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts"
 import { SpendingInsights } from "@/components/dashboard/spending-insights"
-import { format } from "date-fns"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardPage() {
@@ -20,11 +19,15 @@ export default async function DashboardPage() {
     user?.email?.split("@")[0] ||
     "there"
 
-  // Time-aware greeting
-  const hour = new Date().getHours()
+  // Time-aware greeting using IST (Asia/Kolkata, UTC+5:30)
+  const nowIST = new Date()
+  const hourIST = parseInt(
+    nowIST.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false }),
+    10
+  )
   const greeting =
-    hour < 12 ? "Good morning" :
-    hour < 17 ? "Good afternoon" :
+    hourIST < 12 ? "Good morning" :
+    hourIST < 17 ? "Good afternoon" :
     "Good evening"
 
   const recentTransactions = transactions?.slice(0, 5) || []
@@ -123,7 +126,14 @@ export default async function DashboardPage() {
                          {Array.isArray(t.category) ? t.category[0]?.name : (t.category as any)?.name || "Uncategorized"}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {format(new Date(t.date), "MMM d, h:mm a")}
+                        {new Date(t.date).toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                          day: "numeric",
+                          month: "short",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
                       </p>
                     </div>
                     <div className={`text-sm font-semibold shrink-0 ${t.type === 'expense' ? 'text-rose-500' : 'text-emerald-500'}`}>

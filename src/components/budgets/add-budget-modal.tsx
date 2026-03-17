@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -52,6 +52,7 @@ export function AddBudgetModal() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [categories, setCategories] = useState<any[]>([])
+  const [categorySearch, setCategorySearch] = useState("")
 
   const form = useForm<BudgetFormValues>({
     resolver: zodResolver(budgetSchema),
@@ -66,6 +67,7 @@ export function AddBudgetModal() {
     async function fetchCats() {
       const { data } = await getCategories()
       if (data) {
+        // Already sorted alphabetically by the server query
         setCategories(data.filter(c => c.type === 'expense'))
       }
     }
@@ -106,34 +108,69 @@ export function AddBudgetModal() {
             <FormField
               control={form.control}
               name="categoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="flex h-6 w-6 items-center justify-center rounded-full"
-                              style={{ backgroundColor: `${category.color}20`, color: category.color }}
-                            >
-                              <DynamicIcon name={category.icon} className="h-3 w-3" />
-                            </div>
-                            {category.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const selectedCat = categories.find(c => c.id === field.value)
+                const filteredCats = categories.filter(c =>
+                  (c.name || "").toLowerCase().includes(categorySearch.toLowerCase())
+                )
+                return (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={(val) => { field.onChange(val); setCategorySearch("") }} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category">
+                            {selectedCat ? (
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="flex h-5 w-5 items-center justify-center rounded-full"
+                                  style={{ backgroundColor: `${selectedCat.color}20`, color: selectedCat.color }}
+                                >
+                                  <DynamicIcon name={selectedCat.icon} className="h-3 w-3" />
+                                </div>
+                                <span>{selectedCat.name || "Unnamed Category"}</span>
+                              </div>
+                            ) : (
+                              "Select a category"
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {/* Search box */}
+                        <div className="flex items-center border-b px-2 py-1.5 sticky top-0 bg-popover z-10">
+                          <Search className="h-3.5 w-3.5 mr-2 text-muted-foreground shrink-0" />
+                          <input
+                            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                            placeholder="Search categories…"
+                            value={categorySearch}
+                            onChange={e => setCategorySearch(e.target.value)}
+                            onKeyDown={e => e.stopPropagation()}
+                          />
+                        </div>
+                        {filteredCats.length === 0 ? (
+                          <div className="py-4 text-center text-sm text-muted-foreground">No categories found</div>
+                        ) : (
+                          filteredCats.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="flex h-6 w-6 items-center justify-center rounded-full"
+                                  style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                                >
+                                  <DynamicIcon name={category.icon} className="h-3 w-3" />
+                                </div>
+                                {category.name || "Unnamed Category"}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )
+              }}
             />
 
             <div className="grid grid-cols-2 gap-4">
