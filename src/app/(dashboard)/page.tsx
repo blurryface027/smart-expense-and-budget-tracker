@@ -3,6 +3,7 @@ import { ArrowDownIcon, ArrowUpIcon, Wallet } from "lucide-react"
 import { getDashboardStats } from "@/lib/actions/dashboard"
 import { getTransactions } from "@/lib/actions/transactions"
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts"
+import { SpendingInsights } from "@/components/dashboard/spending-insights"
 import { format } from "date-fns"
 import { createClient } from "@/lib/supabase/server"
 
@@ -86,6 +87,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Spending Insights */}
+      <SpendingInsights />
 
       {/* Charts & Recent — stacked on mobile, side-by-side on lg */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
