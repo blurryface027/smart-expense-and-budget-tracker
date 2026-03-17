@@ -91,3 +91,45 @@ export async function getBudgets() {
 
   return { data: budgetsWithSpent, error: null }
 }
+
+/** Returns a map of categoryId → budget status for the current month.
+ *  Used client-side in AddTransactionModal for real-time budget feedback. */
+export async function getBudgetStatus(): Promise<{
+  data: Record<string, { spent: number; limit: number; remaining: number; isOver: boolean; isNear: boolean }> | null
+  error: string | null
+}> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: "Not authenticated" }
+
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const [{ data: budgets }, { data: transactions }] = await Promise.all([
+    supabase.from("budgets").select("category_id, limit_amount").eq("user_id", user.id),
+    supabase.from("transactions").select("amount, category_id")
+      .eq("user_id", user.id).eq("type", "expense").gte("date", startOfMonth),
+  ])
+
+  if (!budgets) return { data: {}, error: null }
+
+  const result: Record<string, { spent: number; limit: number; remaining: number; isOver: boolean; isNear: boolean }> = {}
+
+  for (const b of budgets) {
+    const spent = (transactions ?? [])
+      .filter(t => t.category_id === b.category_id)
+      .reduce((sum, t) => sum + Number(t.amount), 0)
+    const limit = Number(b.limit_amount)
+    const remaining = Math.max(0, limit - spent)
+    const percentage = limit > 0 ? (spent / limit) * 100 : 0
+    result[b.category_id] = {
+      spent,
+      limit,
+      remaining,
+      isOver: spent >= limit,
+      isNear: percentage >= 80 && spent < limit,
+    }
+  }
+
+  return { data: result, error: null }
+}

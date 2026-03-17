@@ -21,6 +21,41 @@ export async function addTransaction(data: TransactionFormValues) {
     return { error: "Not authenticated" }
   }
 
+  // ── Budget enforcement (expenses only) ─────────────────────────────────
+  if (parsed.data.type === "expense") {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+    const { data: budget } = await supabase
+      .from("budgets")
+      .select("limit_amount")
+      .eq("user_id", user.id)
+      .eq("category_id", parsed.data.categoryId)
+      .maybeSingle()
+
+    if (budget) {
+      const { data: existing } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("user_id", user.id)
+        .eq("category_id", parsed.data.categoryId)
+        .eq("type", "expense")
+        .gte("date", startOfMonth)
+
+      const spent = existing?.reduce((sum, t) => sum + Number(t.amount), 0) ?? 0
+      const newTotal = spent + parsed.data.amount
+
+      if (newTotal > budget.limit_amount) {
+        const remaining = Math.max(0, budget.limit_amount - spent)
+        return {
+          error: `Budget limit exceeded. You can only spend ₹${remaining.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} more in this category this month.`,
+          budgetExceeded: true,
+        }
+      }
+    }
+  }
+  // ───────────────────────────────────────────────────────────────────────
+
   const { error } = await supabase.from("transactions").insert({
     user_id: user.id,
     amount: parsed.data.amount,
