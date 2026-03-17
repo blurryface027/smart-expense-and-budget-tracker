@@ -88,12 +88,10 @@ export function AddBudgetModal() {
 
   return (
     <>
-      <div onClick={() => setOpen(true)}>
-        <Button className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Set Budget Limit
-        </Button>
-      </div>
+      <Button type="button" className="w-full sm:w-auto" onClick={() => setOpen(true)}>
+        <Plus className="mr-2 h-4 w-4" />
+        Set Budget Limit
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="w-full max-w-[425px] mx-auto">
         <DialogHeader>

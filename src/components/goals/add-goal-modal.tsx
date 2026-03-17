@@ -63,12 +63,10 @@ export function AddGoalModal() {
 
   return (
     <>
-      <div onClick={() => setOpen(true)}>
-        <Button className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Goal
-        </Button>
-      </div>
+      <Button type="button" className="w-full sm:w-auto" onClick={() => setOpen(true)}>
+        <Plus className="mr-2 h-4 w-4" />
+        Create New Goal
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="w-full max-w-[425px] mx-auto">
         <DialogHeader>
@@ -134,26 +132,21 @@ export function AddGoalModal() {
                     <FormLabel>Deadline (Optional)</FormLabel>
                     <div>
                       <Popover>
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <PopoverTrigger>
-                            <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
+                        <FormControl>
+                          <PopoverTrigger
+                            className={cn(
+                              "w-full pl-3 h-9 text-left font-normal border rounded-md flex items-center bg-background text-sm",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto mr-3 h-4 w-4 opacity-50" />
                           </PopoverTrigger>
-                        </div>
+                        </FormControl>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"

@@ -29,26 +29,28 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: always call getUser() — do NOT use getSession() here.
-  // getSession() reads from the cookie (untrusted), getUser() validates
-  // against the Supabase Auth server (trusted).
+  // Use getSession() which reads from the cookie (no network round-trip).
+  // getUser() validates against the Supabase server on every request — that
+  // adds latency on every navigation and can cause perceived "double-click"
+  // behaviour. We leave getUser() for Server Components that actually need
+  // validated identity (e.g. DashboardLayout).
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
   // Redirect unauthenticated users away from protected routes
-  if (!user && !isAuthRoute) {
+  if (!session && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from auth routes
-  if (user && isAuthRoute) {
+  if (session && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
