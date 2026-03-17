@@ -1,6 +1,6 @@
 {
   "node": {
-    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+    "00f39037fb233a8d239b1c92494c6926538cacc8f9": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,
@@ -10,12 +10,42 @@
         }
       },
       "layer": {
-        "app/(dashboard)/budgets/page": "action-browser"
+        "app/(dashboard)/budgets/page": "rsc"
       },
       "exportedName": "signout",
       "filename": "src/app/(auth)/auth-actions.ts"
     },
-    "00f65e7170fee4d9f2859e7c74de5ca10a12ecadf0": {
+    "40a0c3f4add0723f1ee73a98e96713707b5ba0c50f": {
+      "workers": {
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/budgets/page": "rsc"
+      },
+      "exportedName": "signup",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "40ce0392a00859b2f8da9518f0bf6f23872b3b5c02": {
+      "workers": {
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/budgets/page": "rsc"
+      },
+      "exportedName": "login",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "007c3d8b49425948126f8b7ffa59a29cf0d1cf3f10": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,
@@ -30,7 +60,7 @@
       "exportedName": "getBudgets",
       "filename": "src/lib/actions/budgets.ts"
     },
-    "40cc8d635e0bb4122356cb7fa79b1ab703adb85603": {
+    "401b9b3db99e8e1ee53d47c678d0a5602a502a3b2e": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,
@@ -45,7 +75,7 @@
       "exportedName": "addBudget",
       "filename": "src/lib/actions/budgets.ts"
     },
-    "00f36ad3ad1f69b130e5552b5244c66d0616f9c6ec": {
+    "00b9482eefe4acca0fa71d751a1856fa0f3ea98f52": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,

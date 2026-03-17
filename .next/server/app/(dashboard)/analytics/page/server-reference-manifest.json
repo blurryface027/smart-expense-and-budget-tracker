@@ -1,6 +1,6 @@
 {
   "node": {
-    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+    "00f39037fb233a8d239b1c92494c6926538cacc8f9": {
       "workers": {
         "app/(dashboard)/analytics/page": {
           "moduleId": 380351,
@@ -10,12 +10,42 @@
         }
       },
       "layer": {
-        "app/(dashboard)/analytics/page": "action-browser"
+        "app/(dashboard)/analytics/page": "rsc"
       },
       "exportedName": "signout",
       "filename": "src/app/(auth)/auth-actions.ts"
     },
-    "00d2f9d4deeca867c30ee7d8fe6015daa543cb284c": {
+    "40a0c3f4add0723f1ee73a98e96713707b5ba0c50f": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "rsc"
+      },
+      "exportedName": "signup",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "40ce0392a00859b2f8da9518f0bf6f23872b3b5c02": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "rsc"
+      },
+      "exportedName": "login",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "0019138c8ef67ece5e31353cde2654f42b78f84c6b": {
       "workers": {
         "app/(dashboard)/analytics/page": {
           "moduleId": 380351,
@@ -30,7 +60,7 @@
       "exportedName": "getAnalyticsData",
       "filename": "src/lib/actions/analytics.ts"
     },
-    "00f16529156edfb6b5c1efa1d18b1f7b8cb472a401": {
+    "00637c26bf40143b300d25473fc5a434c8c1d05a0b": {
       "workers": {
         "app/(dashboard)/analytics/page": {
           "moduleId": 380351,

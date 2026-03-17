@@ -1,36 +1,106 @@
 {
   "node": {
-    "4033b65ce12c0f1c7f964febc619d89e5f05c995b8": {
+    "40ce0392a00859b2f8da9518f0bf6f23872b3b5c02": {
       "workers": {
         "app/(auth)/login/page": {
           "moduleId": 492625,
           "async": false,
           "exportedName": "login",
           "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/goals/page": {
+          "moduleId": 995908,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/transactions/page": {
+          "moduleId": 898537,
+          "async": false,
+          "exportedName": "login",
+          "filename": "src/app/(auth)/auth-actions.ts"
         }
       },
       "layer": {
-        "app/(auth)/login/page": "action-browser"
+        "app/(auth)/login/page": "action-browser",
+        "app/(dashboard)/analytics/page": "rsc",
+        "app/(dashboard)/budgets/page": "rsc",
+        "app/(dashboard)/goals/page": "rsc",
+        "app/(dashboard)/page": "rsc",
+        "app/(dashboard)/transactions/page": "rsc"
       },
       "filename": "src/app/(auth)/auth-actions.ts",
       "exportedName": "login"
     },
-    "409e7a413df3a675b4f558004c4e35a8adb8435af0": {
+    "40a0c3f4add0723f1ee73a98e96713707b5ba0c50f": {
       "workers": {
         "app/(auth)/login/page": {
           "moduleId": 492625,
           "async": false,
           "exportedName": "signup",
           "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/goals/page": {
+          "moduleId": 995908,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        },
+        "app/(dashboard)/transactions/page": {
+          "moduleId": 898537,
+          "async": false,
+          "exportedName": "signup",
+          "filename": "src/app/(auth)/auth-actions.ts"
         }
       },
       "layer": {
-        "app/(auth)/login/page": "action-browser"
+        "app/(auth)/login/page": "action-browser",
+        "app/(dashboard)/analytics/page": "rsc",
+        "app/(dashboard)/budgets/page": "rsc",
+        "app/(dashboard)/goals/page": "rsc",
+        "app/(dashboard)/page": "rsc",
+        "app/(dashboard)/transactions/page": "rsc"
       },
       "filename": "src/app/(auth)/auth-actions.ts",
       "exportedName": "signup"
     },
-    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+    "00f39037fb233a8d239b1c92494c6926538cacc8f9": {
       "workers": {
         "app/(dashboard)/analytics/page": {
           "moduleId": 380351,
@@ -64,16 +134,16 @@
         }
       },
       "layer": {
-        "app/(dashboard)/analytics/page": "action-browser",
-        "app/(dashboard)/budgets/page": "action-browser",
-        "app/(dashboard)/goals/page": "action-browser",
-        "app/(dashboard)/page": "action-browser",
-        "app/(dashboard)/transactions/page": "action-browser"
+        "app/(dashboard)/analytics/page": "rsc",
+        "app/(dashboard)/budgets/page": "rsc",
+        "app/(dashboard)/goals/page": "rsc",
+        "app/(dashboard)/page": "rsc",
+        "app/(dashboard)/transactions/page": "rsc"
       },
       "filename": "src/app/(auth)/auth-actions.ts",
       "exportedName": "signout"
     },
-    "00f16529156edfb6b5c1efa1d18b1f7b8cb472a401": {
+    "00637c26bf40143b300d25473fc5a434c8c1d05a0b": {
       "workers": {
         "app/(dashboard)/analytics/page": {
           "moduleId": 380351,
@@ -95,7 +165,7 @@
       "filename": "src/lib/actions/dashboard.ts",
       "exportedName": "getDashboardStats"
     },
-    "007b76e5b04bbe5e6d4123767404e5b47e707e83d4": {
+    "002f4983491fc331d05a166703ffc1768724ea7647": {
       "workers": {
         "app/(dashboard)/page": {
           "moduleId": 497584,
@@ -117,7 +187,7 @@
       "filename": "src/lib/actions/transactions.ts",
       "exportedName": "getTransactions"
     },
-    "00f36ad3ad1f69b130e5552b5244c66d0616f9c6ec": {
+    "00b9482eefe4acca0fa71d751a1856fa0f3ea98f52": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,
@@ -146,7 +216,7 @@
       "filename": "src/lib/actions/transactions.ts",
       "exportedName": "getCategories"
     },
-    "4050b091512c07d697b43d23c3f1400afe4937356e": {
+    "40563d79f2f936a2b378bbb3dae283f24f34935de8": {
       "workers": {
         "app/(dashboard)/page": {
           "moduleId": 497584,
@@ -168,7 +238,7 @@
       "filename": "src/lib/actions/transactions.ts",
       "exportedName": "addTransaction"
     },
-    "00d2f9d4deeca867c30ee7d8fe6015daa543cb284c": {
+    "0019138c8ef67ece5e31353cde2654f42b78f84c6b": {
       "workers": {
         "app/(dashboard)/analytics/page": {
           "moduleId": 380351,
@@ -183,7 +253,7 @@
       "filename": "src/lib/actions/analytics.ts",
       "exportedName": "getAnalyticsData"
     },
-    "00f65e7170fee4d9f2859e7c74de5ca10a12ecadf0": {
+    "007c3d8b49425948126f8b7ffa59a29cf0d1cf3f10": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,
@@ -198,7 +268,7 @@
       "filename": "src/lib/actions/budgets.ts",
       "exportedName": "getBudgets"
     },
-    "40cc8d635e0bb4122356cb7fa79b1ab703adb85603": {
+    "401b9b3db99e8e1ee53d47c678d0a5602a502a3b2e": {
       "workers": {
         "app/(dashboard)/budgets/page": {
           "moduleId": 675730,
@@ -213,7 +283,7 @@
       "filename": "src/lib/actions/budgets.ts",
       "exportedName": "addBudget"
     },
-    "004e0cac68a615cf2429fcf7907d7395e3a7a36638": {
+    "00ce050317bee570641c3b99c2454e2a383b365be3": {
       "workers": {
         "app/(dashboard)/goals/page": {
           "moduleId": 995908,
@@ -228,7 +298,7 @@
       "filename": "src/lib/actions/goals.ts",
       "exportedName": "getGoals"
     },
-    "4095726b4926e69b432567ca0703812fb70badbaec": {
+    "408e9d3c93c0f7b53ea03a7700f43132b3b1e4bf18": {
       "workers": {
         "app/(dashboard)/goals/page": {
           "moduleId": 995908,
@@ -245,5 +315,5 @@
     }
   },
   "edge": {},
-  "encryptionKey": "fZ6LKprxt0kXr+yJ8nKZdHr9aHYqdviYLYgNSRjnbcg="
+  "encryptionKey": "D1SXPOsqFdF4VOyJjTGRCAThrFSxO4SDK+sJo5YK8tA="
 }
