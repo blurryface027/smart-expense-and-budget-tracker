@@ -42,7 +42,10 @@ function mapAuthError(message: string): string {
   return "Something went wrong. Please try again."
 }
 
-export type AuthResult = { error: string } | { success: true }
+export type AuthResult =
+  | { error: string }
+  | { success: true }
+  | { signedUp: true }  // signup OK but email confirmation required
 
 export async function login(formData: FormData): Promise<AuthResult> {
   const email = (formData.get("email") as string)?.trim()
@@ -93,8 +96,11 @@ export async function signup(formData: FormData): Promise<AuthResult> {
     return { error: mapAuthError(error.message) }
   }
 
-  revalidatePath("/", "layout")
-  redirect("/")
+  // Always return a success signal — never redirect from signup.
+  // This guarantees the green "Signup successful" banner always shows,
+  // regardless of whether Supabase email confirmation is enabled or not.
+  // The user then explicitly logs in, which handles the session + redirect.
+  return { signedUp: true }
 }
 
 export async function signout() {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { WalletCards, AlertCircle, Loader2, User } from "lucide-react"
+import { WalletCards, AlertCircle, Loader2, User, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,17 +17,20 @@ import { login, signup } from "../auth-actions"
 
 export function LoginFormClient() {
   const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [mode, setMode] = useState<"login" | "signup">("login")
 
   function switchMode(next: "login" | "signup") {
     setMode(next)
     setError(null)
+    setSuccessMsg(null)
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    setSuccessMsg(null)
 
     const formData = new FormData(e.currentTarget)
     const email = (formData.get("email") as string)?.trim()
@@ -56,14 +59,26 @@ export function LoginFormClient() {
       const action = mode === "signup" ? signup : login
       const result = await action(formData)
 
-      // result is only defined when auth FAILS — on success the server action
-      // calls redirect() which the framework intercepts before this resolves.
       if (result && "error" in result) {
         setError(result.error)
+      } else if (result && "signedUp" in result) {
+        // Email confirmation required — show green success and switch to login
+        setSuccessMsg("Signup successful! You can now log in.")
+        setMode("login")
       }
-    } catch {
-      // Only genuine unexpected errors arrive here — not redirect signals.
-      setError("An unexpected error occurred. Please try again.")
+      // If redirect() fired (login success), this block is never reached
+    } catch (e: unknown) {
+      // Next.js redirect() throws a special internal signal — NOT a real error.
+      // Its digest property starts with "NEXT_REDIRECT". We must ignore it,
+      // otherwise a successful login shows "An unexpected error occurred."
+      const isRedirect =
+        e instanceof Error &&
+        ((e as any).digest?.startsWith("NEXT_REDIRECT") ||
+          e.message === "NEXT_REDIRECT")
+
+      if (!isRedirect) {
+        setError("An unexpected error occurred. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -134,6 +149,17 @@ export function LoginFormClient() {
                 onChange={() => setError(null)}
               />
             </div>
+
+            {/* Green success banner */}
+            {successMsg && (
+              <div
+                role="status"
+                className="flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-600 dark:text-emerald-400"
+              >
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>{successMsg}</span>
+              </div>
+            )}
 
             {/* Inline error alert */}
             {error && (
