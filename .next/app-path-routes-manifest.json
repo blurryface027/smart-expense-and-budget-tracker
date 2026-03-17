@@ -1,0 +1,11 @@
+{
+  "/(auth)/login/page": "/login",
+  "/(dashboard)/analytics/page": "/analytics",
+  "/(dashboard)/budgets/page": "/budgets",
+  "/(dashboard)/goals/page": "/goals",
+  "/(dashboard)/page": "/",
+  "/(dashboard)/transactions/page": "/transactions",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico"
+}

@@ -1,0 +1,50 @@
+{
+  "node": {
+    "006dc95a4f9a678d9b26e0da3533bb924eecf7dc2f": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/analytics/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/analytics.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/lib/actions/dashboard.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "009aace23e05a9f7b79fe16debf36cb8af87009f07": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/analytics/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/analytics.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/lib/actions/dashboard.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAnalyticsData",
+          "filename": "src/lib/actions/analytics.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "rsc"
+      },
+      "exportedName": "getAnalyticsData",
+      "filename": "src/lib/actions/analytics.ts"
+    },
+    "00a9a8132deb9a3e22cc6806496efbd5d383d37fea": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/analytics/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/analytics.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/lib/actions/dashboard.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getDashboardStats",
+          "filename": "src/lib/actions/dashboard.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "rsc"
+      },
+      "exportedName": "getDashboardStats",
+      "filename": "src/lib/actions/dashboard.ts"
+    }
+  },
+  "edge": {}
+}

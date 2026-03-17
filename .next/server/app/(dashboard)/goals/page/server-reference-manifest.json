@@ -1,0 +1,50 @@
+{
+  "node": {
+    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+      "workers": {
+        "app/(dashboard)/goals/page": {
+          "moduleId": 995908,
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/goals/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "004e0cac68a615cf2429fcf7907d7395e3a7a36638": {
+      "workers": {
+        "app/(dashboard)/goals/page": {
+          "moduleId": 995908,
+          "async": false,
+          "exportedName": "getGoals",
+          "filename": "src/lib/actions/goals.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/goals/page": "rsc"
+      },
+      "exportedName": "getGoals",
+      "filename": "src/lib/actions/goals.ts"
+    },
+    "4095726b4926e69b432567ca0703812fb70badbaec": {
+      "workers": {
+        "app/(dashboard)/goals/page": {
+          "moduleId": 995908,
+          "async": false,
+          "exportedName": "addGoal",
+          "filename": "src/lib/actions/goals.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/goals/page": "action-browser"
+      },
+      "exportedName": "addGoal",
+      "filename": "src/lib/actions/goals.ts"
+    }
+  },
+  "edge": {}
+}

@@ -1,0 +1,50 @@
+{
+  "node": {
+    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "00d2f9d4deeca867c30ee7d8fe6015daa543cb284c": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "getAnalyticsData",
+          "filename": "src/lib/actions/analytics.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "rsc"
+      },
+      "exportedName": "getAnalyticsData",
+      "filename": "src/lib/actions/analytics.ts"
+    },
+    "00f16529156edfb6b5c1efa1d18b1f7b8cb472a401": {
+      "workers": {
+        "app/(dashboard)/analytics/page": {
+          "moduleId": 380351,
+          "async": false,
+          "exportedName": "getDashboardStats",
+          "filename": "src/lib/actions/dashboard.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/analytics/page": "rsc"
+      },
+      "exportedName": "getDashboardStats",
+      "filename": "src/lib/actions/dashboard.ts"
+    }
+  },
+  "edge": {}
+}

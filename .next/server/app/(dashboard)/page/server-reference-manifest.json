@@ -1,0 +1,80 @@
+{
+  "node": {
+    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+      "workers": {
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "00f16529156edfb6b5c1efa1d18b1f7b8cb472a401": {
+      "workers": {
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "getDashboardStats",
+          "filename": "src/lib/actions/dashboard.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/page": "rsc"
+      },
+      "exportedName": "getDashboardStats",
+      "filename": "src/lib/actions/dashboard.ts"
+    },
+    "007b76e5b04bbe5e6d4123767404e5b47e707e83d4": {
+      "workers": {
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "getTransactions",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/page": "rsc"
+      },
+      "exportedName": "getTransactions",
+      "filename": "src/lib/actions/transactions.ts"
+    },
+    "00f36ad3ad1f69b130e5552b5244c66d0616f9c6ec": {
+      "workers": {
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "getCategories",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/page": "rsc"
+      },
+      "exportedName": "getCategories",
+      "filename": "src/lib/actions/transactions.ts"
+    },
+    "4050b091512c07d697b43d23c3f1400afe4937356e": {
+      "workers": {
+        "app/(dashboard)/page": {
+          "moduleId": 497584,
+          "async": false,
+          "exportedName": "addTransaction",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/page": "rsc"
+      },
+      "exportedName": "addTransaction",
+      "filename": "src/lib/actions/transactions.ts"
+    }
+  },
+  "edge": {}
+}

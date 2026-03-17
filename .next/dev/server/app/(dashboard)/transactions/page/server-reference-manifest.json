@@ -1,0 +1,65 @@
+{
+  "node": {
+    "006dc95a4f9a678d9b26e0da3533bb924eecf7dc2f": {
+      "workers": {
+        "app/(dashboard)/transactions/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/transactions/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/transactions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/transactions/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "00e3186c08d021ccf9ce8944fa521911aa9c7a8853": {
+      "workers": {
+        "app/(dashboard)/transactions/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/transactions/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/transactions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCategories",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/transactions/page": "action-browser"
+      },
+      "exportedName": "getCategories",
+      "filename": "src/lib/actions/transactions.ts"
+    },
+    "00fa9b05ea06f754db063cc249ff4f22b6bff0196a": {
+      "workers": {
+        "app/(dashboard)/transactions/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/transactions/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/transactions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getTransactions",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/transactions/page": "rsc"
+      },
+      "exportedName": "getTransactions",
+      "filename": "src/lib/actions/transactions.ts"
+    },
+    "40a172a8d627b034349de4939a34545d64709ff34f": {
+      "workers": {
+        "app/(dashboard)/transactions/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/transactions/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/transactions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addTransaction",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/transactions/page": "action-browser"
+      },
+      "exportedName": "addTransaction",
+      "filename": "src/lib/actions/transactions.ts"
+    }
+  },
+  "edge": {}
+}

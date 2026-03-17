@@ -1,0 +1,50 @@
+{
+  "node": {
+    "006dc95a4f9a678d9b26e0da3533bb924eecf7dc2f": {
+      "workers": {
+        "app/(dashboard)/goals/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/goals/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/goals.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/goals/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "00b6ca9505e7343c50fc644f3bbe5b9026afea5dce": {
+      "workers": {
+        "app/(dashboard)/goals/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/goals/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/goals.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getGoals",
+          "filename": "src/lib/actions/goals.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/goals/page": "rsc"
+      },
+      "exportedName": "getGoals",
+      "filename": "src/lib/actions/goals.ts"
+    },
+    "407b62474ce0753913ed50d63f24456923b76ad331": {
+      "workers": {
+        "app/(dashboard)/goals/page": {
+          "moduleId": "[project]/.next-internal/server/app/(dashboard)/goals/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(auth)/auth-actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/actions/goals.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addGoal",
+          "filename": "src/lib/actions/goals.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/goals/page": "action-browser"
+      },
+      "exportedName": "addGoal",
+      "filename": "src/lib/actions/goals.ts"
+    }
+  },
+  "edge": {}
+}

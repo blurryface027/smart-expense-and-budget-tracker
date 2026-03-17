@@ -1,0 +1,65 @@
+{
+  "node": {
+    "00cdedb88b84976f3caad1737f1010a8f290033040": {
+      "workers": {
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "signout",
+          "filename": "src/app/(auth)/auth-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/budgets/page": "action-browser"
+      },
+      "exportedName": "signout",
+      "filename": "src/app/(auth)/auth-actions.ts"
+    },
+    "00f65e7170fee4d9f2859e7c74de5ca10a12ecadf0": {
+      "workers": {
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "getBudgets",
+          "filename": "src/lib/actions/budgets.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/budgets/page": "rsc"
+      },
+      "exportedName": "getBudgets",
+      "filename": "src/lib/actions/budgets.ts"
+    },
+    "40cc8d635e0bb4122356cb7fa79b1ab703adb85603": {
+      "workers": {
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "addBudget",
+          "filename": "src/lib/actions/budgets.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/budgets/page": "action-browser"
+      },
+      "exportedName": "addBudget",
+      "filename": "src/lib/actions/budgets.ts"
+    },
+    "00f36ad3ad1f69b130e5552b5244c66d0616f9c6ec": {
+      "workers": {
+        "app/(dashboard)/budgets/page": {
+          "moduleId": 675730,
+          "async": false,
+          "exportedName": "getCategories",
+          "filename": "src/lib/actions/transactions.ts"
+        }
+      },
+      "layer": {
+        "app/(dashboard)/budgets/page": "action-browser"
+      },
+      "exportedName": "getCategories",
+      "filename": "src/lib/actions/transactions.ts"
+    }
+  },
+  "edge": {}
+}
