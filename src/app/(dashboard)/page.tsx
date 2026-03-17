@@ -4,18 +4,38 @@ import { getDashboardStats } from "@/lib/actions/dashboard"
 import { getTransactions } from "@/lib/actions/transactions"
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts"
 import { format } from "date-fns"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardPage() {
-  const { data: stats } = await getDashboardStats()
-  const { data: transactions } = await getTransactions()
-  
+  const [{ data: stats }, { data: transactions }, supabase] = await Promise.all([
+    getDashboardStats(),
+    getTransactions(),
+    createClient(),
+  ])
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const userName: string =
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "there"
+
+  // Time-aware greeting
+  const hour = new Date().getHours()
+  const greeting =
+    hour < 12 ? "Good morning" :
+    hour < 17 ? "Good afternoon" :
+    "Good evening"
+
   const recentTransactions = transactions?.slice(0, 5) || []
 
   return (
     <div className="flex flex-1 flex-col gap-4 sm:gap-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h2>
+      {/* Personalized Welcome Header */}
+      <div className="flex flex-col gap-0.5">
+        <p className="text-sm text-muted-foreground font-medium">{greeting},</p>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Welcome back, {userName}! 👋
+        </h2>
       </div>
       
       {/* Stats Cards — 1 col on mobile, 3 on large */}

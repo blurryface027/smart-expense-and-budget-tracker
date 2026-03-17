@@ -17,5 +17,12 @@ export default async function DashboardLayout({
     return redirect("/login")
   }
 
-  return <AppLayout>{children}</AppLayout>
+  // Extract name from user_metadata (set during signup)
+  // Falls back to the part before @ in the email address
+  const userName: string =
+    user.user_metadata?.name ||
+    user.email?.split("@")[0] ||
+    "there"
+
+  return <AppLayout userName={userName}>{children}</AppLayout>
 }

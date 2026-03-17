@@ -66,6 +66,11 @@ export async function login(formData: FormData): Promise<AuthResult> {
 export async function signup(formData: FormData): Promise<AuthResult> {
   const email = (formData.get("email") as string)?.trim()
   const password = formData.get("password") as string
+  const name = (formData.get("name") as string)?.trim()
+
+  if (!name) {
+    return { error: "Please enter your full name." }
+  }
 
   if (!email || !password) {
     return { error: "Please fill in all fields." }
@@ -76,7 +81,13 @@ export async function signup(formData: FormData): Promise<AuthResult> {
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({ email, password })
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name },
+    },
+  })
 
   if (error) {
     return { error: mapAuthError(error.message) }

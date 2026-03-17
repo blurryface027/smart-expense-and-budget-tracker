@@ -5,10 +5,15 @@ import { WalletCards, LogOut } from "lucide-react"
 import { signout } from "@/app/(auth)/auth-actions"
 import { Button } from "@/components/ui/button"
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+interface AppLayoutProps {
+  children: React.ReactNode
+  userName: string
+}
+
+export function AppLayout({ children, userName }: AppLayoutProps) {
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row bg-background">
-      <Sidebar />
+      <Sidebar userName={userName} />
       <div className="flex flex-col flex-1 pb-16 md:pb-0 min-w-0">
         {/* Mobile Header */}
         <header className="flex h-14 items-center justify-between gap-2 border-b bg-muted/20 px-3 md:hidden shrink-0">
