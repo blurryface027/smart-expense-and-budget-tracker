@@ -61,7 +61,7 @@ export function Sidebar() {
              </div>
            </div>
            <form action={signout}>
-             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+             <Button type="submit" variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="Sign out">
                 <LogOut className="h-4 w-4" />
              </Button>
            </form>

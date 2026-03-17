@@ -21,7 +21,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-1">
             <ModeToggle />
             <form action={signout}>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8" title="Sign out">
+              <Button type="submit" variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8" title="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </form>
