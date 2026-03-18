@@ -9,11 +9,12 @@ import { RegretPrompt } from "@/components/dashboard/regret-prompt"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardPage() {
-  const [{ data: stats }, { data: transactions }, supabase] = await Promise.all([
+  const [{ data: stats }, { data: txData }, supabase] = await Promise.all([
     getDashboardStats(),
     getTransactions(),
     createClient(),
   ])
+  const transactions = (txData as any)?.transactions || []
 
   const { data: { user } } = await supabase.auth.getUser()
   const userName: string =
@@ -126,7 +127,7 @@ export default async function DashboardPage() {
                   No recent transactions
                 </div>
               ) : (
-                recentTransactions.map((t) => (
+                transactions.slice(0, 5).map((t: any) => (
                   <div key={t.id} className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
                        <Wallet className="h-4 w-4 text-muted-foreground" />
