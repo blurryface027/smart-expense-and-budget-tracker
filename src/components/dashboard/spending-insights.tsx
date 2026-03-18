@@ -5,9 +5,11 @@ import {
   Sparkles,
   Lightbulb,
   ThumbsUp,
+  HeartCrack,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSpendingInsights, type Insight, type InsightSeverity } from "@/lib/actions/insights"
+import { getRegretStats } from "@/lib/actions/regret"
 
 const SEVERITY_CONFIG: Record<
   InsightSeverity,
@@ -77,7 +79,12 @@ function InsightCard({ insight }: { insight: Insight }) {
 }
 
 export async function SpendingInsights() {
-  const { insights, hasEnoughData } = await getSpendingInsights()
+  const [{ insights, hasEnoughData }, { data: regretStats }] = await Promise.all([
+    getSpendingInsights(),
+    getRegretStats(),
+  ])
+
+  const hasRegretData = regretStats && regretStats.length > 0
 
   return (
     <Card className="rounded-xl shadow-sm border-muted">
@@ -87,7 +94,7 @@ export async function SpendingInsights() {
           <CardTitle className="text-base sm:text-lg">Spending Insights</CardTitle>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {!hasEnoughData || insights.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-6 text-center border border-dashed rounded-lg">
             <Sparkles className="h-8 w-8 text-muted-foreground/40" />
@@ -104,6 +111,55 @@ export async function SpendingInsights() {
             {insights.map((insight) => (
               <InsightCard key={insight.id} insight={insight} />
             ))}
+          </div>
+        )}
+
+        {/* ── Regret Analysis ───────────────────────────── */}
+        {hasRegretData && (
+          <div className="pt-2 border-t space-y-2">
+            <div className="flex items-center gap-2 pb-1">
+              <HeartCrack className="h-3.5 w-3.5 text-violet-500" />
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Regret Analysis
+              </p>
+            </div>
+            <div className="space-y-2">
+              {regretStats!.map((stat) => (
+                <div key={stat.category} className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-medium truncate">{stat.category}</span>
+                      <span
+                        className={`shrink-0 ml-2 font-semibold ${
+                          stat.regretPercentage >= 60
+                            ? "text-rose-500"
+                            : stat.regretPercentage >= 30
+                            ? "text-amber-500"
+                            : "text-emerald-500"
+                        }`}
+                      >
+                        {stat.regretPercentage}% regret
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          stat.regretPercentage >= 60
+                            ? "bg-rose-500"
+                            : stat.regretPercentage >= 30
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                        }`}
+                        style={{ width: `${stat.regretPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground/70 italic pt-1">
+              Based on your purchase reflections. Respond to prompts on the dashboard to build this data.
+            </p>
           </div>
         )}
       </CardContent>

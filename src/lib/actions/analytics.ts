@@ -2,7 +2,16 @@
 
 import { createClient } from "@/lib/supabase/server"
 
-export async function getAnalyticsData() {
+export type AnalyticsRange = 'daily' | 'weekly' | 'monthly' | 'custom'
+
+interface AnalyticsParams {
+  range?: AnalyticsRange
+  startDate?: string
+  endDate?: string
+}
+
+export async function getAnalyticsData(params: AnalyticsParams = {}) {
+  const { range = 'monthly', startDate, endDate } = params
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -10,45 +19,258 @@ export async function getAnalyticsData() {
     return { error: "Not authenticated", data: null }
   }
 
-  const { data: transactions, error } = await supabase
-    .from("transactions")
-    .select("amount, type, date, category:categories(name, color)")
-    .eq("user_id", user.id)
+  // ── Determine Date Bounds ───────────────────────────────────────────
+  const now = new Date()
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const nowIST = new Date(now.getTime() + IST_OFFSET_MS)
+  
+  let fromDate: Date
+  let toDate = new Date(nowIST)
+  let prevFromDate: Date
+  let prevToDate: Date
 
-  if (error) {
-    return { error: error.message, data: null }
+  if (range === 'custom' && startDate && endDate) {
+    fromDate = new Date(startDate)
+    toDate = new Date(endDate)
+    const duration = toDate.getTime() - fromDate.getTime()
+    prevFromDate = new Date(fromDate.getTime() - duration)
+    prevToDate = new Date(fromDate.getTime() - 1)
+  } else if (range === 'daily') {
+    fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate()) - IST_OFFSET_MS)
+    prevFromDate = new Date(fromDate.getTime() - 24 * 60 * 60 * 1000)
+    prevToDate = new Date(fromDate.getTime() - 1)
+  } else if (range === 'weekly') {
+    // Week starts on Monday
+    const day = nowIST.getUTCDay()
+    const diff = nowIST.getUTCDate() - day + (day === 0 ? -6 : 1)
+    fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), diff) - IST_OFFSET_MS)
+    prevFromDate = new Date(fromDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+    prevToDate = new Date(fromDate.getTime() - 1)
+  } else {
+    // monthly (default)
+    fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1) - IST_OFFSET_MS)
+    prevFromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth() - 1, 1) - IST_OFFSET_MS)
+    prevToDate = new Date(fromDate.getTime() - 1)
   }
 
-  const now = new Date()
-  const currentMonth = now.getMonth()
-  const currentYear = now.getFullYear()
+  // ── Fetch Data ──────────────────────────────────────────────────────
+  const [
+    { data: transactions, error: txError },
+    { data: regretData },
+    { data: budgets }
+  ] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("amount, type, date, category_id, category:categories(name, color)")
+      .eq("user_id", user.id)
+      .gte("date", prevFromDate.toISOString()),
+    supabase
+      .from("regret_feedback")
+      .select("regretted, transaction_id")
+      .eq("user_id", user.id),
+    supabase
+      .from("budgets")
+      .select("category_id, limit_amount")
+      .eq("user_id", user.id)
+  ])
 
-  // Prepare category breakdown data (for current month expenses)
-  const categoryMap: Record<string, { name: string, value: number, color: string }> = {}
+  if (txError) return { error: txError.message, data: null }
 
-  transactions.forEach((t) => {
-    const tDate = new Date(t.date)
-    const tMonth = tDate.getMonth()
-    const tYear = tDate.getFullYear()
+  // ── Processing ──────────────────────────────────────────────────────
+  const currentPeriodTx = (transactions ?? []).filter(t => new Date(t.date) >= fromDate)
+  const previousPeriodTx = (transactions ?? []).filter(t => {
+    const d = new Date(t.date)
+    return d >= prevFromDate && d <= prevToDate
+  })
 
-    if (tMonth === currentMonth && tYear === currentYear && t.type === 'expense') {
-      const cat = t.category as any;
-      const catName = Array.isArray(cat) ? cat[0]?.name : cat?.name || "Uncategorized"
-      const catColor = Array.isArray(cat) ? cat[0]?.color : cat?.color || "#64748b"
+  // Basic Stats
+  const currentExpenses = currentPeriodTx.filter(t => t.type === 'expense')
+  const prevExpenses = previousPeriodTx.filter(t => t.type === 'expense')
 
-      if (!categoryMap[catName]) {
-        categoryMap[catName] = { name: catName, value: 0, color: catColor }
-      }
-      categoryMap[catName].value += Number(t.amount)
+  const totalSpent = currentExpenses.reduce((sum, t) => sum + Number(t.amount), 0)
+  const prevTotalSpent = prevExpenses.reduce((sum, t) => sum + Number(t.amount), 0)
+  
+  const pctChange = prevTotalSpent > 0 ? ((totalSpent - prevTotalSpent) / prevTotalSpent) * 100 : 0
+
+  // Avg Daily Spend
+  const daysInPeriod = Math.max(1, Math.ceil((toDate.getTime() - fromDate.getTime()) / (24 * 60 * 60 * 1000)))
+  const avgDailySpend = totalSpent / daysInPeriod
+
+  // Highest & Lowest Day (only if multiple days)
+  const dailyMap: Record<string, number> = {}
+  currentExpenses.forEach(t => {
+    const dStr = new Date(t.date).toISOString().split('T')[0]
+    dailyMap[dStr] = (dailyMap[dStr] || 0) + Number(t.amount)
+  })
+  const dailyAmounts = Object.values(dailyMap)
+  const highestDayAmt = dailyAmounts.length > 0 ? Math.max(...dailyAmounts) : 0
+  const lowestDayAmt = dailyAmounts.length > 0 ? Math.min(...dailyAmounts) : 0
+
+  // Categories
+  const catStats: Record<string, { total: number, count: number, name: string, color: string }> = {}
+  currentExpenses.forEach(t => {
+    const cat = t.category as any
+    const name = (Array.isArray(cat) ? cat[0]?.name : cat?.name) || "Other"
+    const color = (Array.isArray(cat) ? cat[0]?.color : cat?.color) || "#64748b"
+    const id = t.category_id
+
+    if (!catStats[id]) catStats[id] = { total: 0, count: 0, name, color }
+    catStats[id].total += Number(t.amount)
+    catStats[id].count += 1
+  })
+
+  const sortedByTotal = Object.values(catStats).sort((a, b) => b.total - a.total)
+  const sortedByCount = Object.values(catStats).sort((a, b) => b.count - a.count)
+
+  const mostExpensiveCategory = sortedByTotal[0]?.name || "None"
+  const mostFrequentCategory = sortedByCount[0]?.name || "None"
+
+  // Pie chart data
+  const categoryData = sortedByTotal.map(c => ({ name: c.name, value: c.total, color: c.color }))
+
+  // Trend Data for Line Chart
+  // If monthly, show last 6 months (as before) or current month daily trend?
+  // Let's do daily trend for current period to make it more "detailed" as asked
+  const trendData: { name: string, total: number }[] = []
+  if (range === 'daily') {
+    trendData.push({ name: fromDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }), total: totalSpent })
+  } else if (range === 'weekly') {
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(fromDate.getTime() + i * 24 * 60 * 60 * 1000)
+        const dStr = d.toISOString().split('T')[0]
+        trendData.push({
+            name: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+            total: dailyMap[dStr] || 0
+        })
+    }
+  } else {
+    // monthly (Date 1 to end of month)
+    const tempDate = new Date(fromDate)
+    while (tempDate.getUTCMonth() === fromDate.getUTCMonth()) {
+      const dStr = tempDate.toISOString().split('T')[0]
+      trendData.push({
+        name: tempDate.getUTCDate().toString(),
+        total: dailyMap[dStr] || 0
+      })
+      tempDate.setUTCDate(tempDate.getUTCDate() + 1)
+    }
+  }
+
+  // ── Smart Insights & Suggestions ────────────────────────────────────
+  const insights: string[] = []
+  const suggestions: string[] = []
+
+  // Weekend vs Weekday
+  let weekendSpend = 0
+  let weekdaySpend = 0
+  currentExpenses.forEach(t => {
+    const day = new Date(t.date).getDay()
+    if (day === 0 || day === 6) weekendSpend += Number(t.amount)
+    else weekdaySpend += Number(t.amount)
+  })
+  
+  if (weekendSpend > weekdaySpend * 1.5 && weekendSpend > 0) {
+    const p = Math.round(((weekendSpend - weekdaySpend) / (weekdaySpend || 1)) * 100)
+    insights.push(`You spend ${p}% more on weekends. Consider planning low-cost activities.`)
+    suggestions.push("Limit weekend spending to save ₹500/month.")
+  }
+
+  // Category Spikes
+  for (const cat of sortedByTotal) {
+    const prevCatAmt = prevExpenses
+      .filter(t => {
+        const tCat = t.category as any
+        const tCatName = (Array.isArray(tCat) ? tCat[0]?.name : tCat?.name) || "Other"
+        return tCatName === cat.name
+      })
+      .reduce((s, t) => s + Number(t.amount), 0)
+    
+    if (prevCatAmt > 0 && cat.total > prevCatAmt * 1.2) {
+      const p = Math.round(((cat.total - prevCatAmt) / prevCatAmt) * 100)
+      insights.push(`${cat.name} spending increased by ${p}% vs last period.`)
+    }
+  }
+
+  // Saving suggestion
+  if (sortedByTotal.length >= 2) {
+    const potentialSavings = Math.round((sortedByTotal[0].total + sortedByTotal[1].total) * 0.1)
+    suggestions.push(`Cut top 2 categories by 10% to save ₹${potentialSavings}.`)
+  }
+
+  // ── Regret Analysis ─────────────────────────────────────────────────
+  const regretMap = new Set((regretData ?? []).filter(r => r.regretted).map(r => r.transaction_id))
+  let totalRegretAmt = 0
+  const catRegret: Record<string, number> = {}
+
+  currentExpenses.forEach(t => {
+    if (regretMap.has((t as any).id)) {
+      totalRegretAmt += Number(t.amount)
+      const cat = t.category as any
+      const name = (Array.isArray(cat) ? cat[0]?.name : cat?.name) || "Other"
+      catRegret[name] = (catRegret[name] || 0) + Number(t.amount)
     }
   })
 
-  // Format map into array
-  const categoryData = Object.values(categoryMap).sort((a, b) => b.value - a.value)
+  const wasteCategories = Object.entries(catRegret)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2)
+    .map(([name]) => name)
+
+  if (totalRegretAmt > 0) {
+    const p = Math.round((totalRegretAmt / totalSpent) * 100)
+    insights.push(`Approx ${p}% of your spending is on items you later regretted.`)
+    if (wasteCategories.length > 0) {
+      insights.push(`Waste-heavy categories: ${wasteCategories.join(', ')}.`)
+    }
+  }
+
+  // ── Budget vs Actual ────────────────────────────────────────────────
+  const budgetVsActual: { category: string, budget: number, spent: number, over: boolean }[] = []
+  const budgetMap: Record<string, number> = {}
+  budgets?.forEach(b => { budgetMap[b.category_id] = Number(b.limit_amount) })
+
+  for (const [catId, stat] of Object.entries(catStats)) {
+    const limit = budgetMap[catId]
+    if (limit) {
+      budgetVsActual.push({
+        category: stat.name,
+        budget: limit,
+        spent: stat.total,
+        over: stat.total > limit
+      })
+      if (stat.total > limit) {
+        insights.push(`You are overspending in ${stat.name}.`)
+      }
+    }
+  }
+
+  // ── Financial Health Score ───────────────────────────────────────────
+  // Simple algorithm: Savings Rate (Income vs Expense) + Budget Adherence + Regret Factor
+  const totalIncome = currentPeriodTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalSpent) / totalIncome) * 100 : 0
+  const budgetAdherence = budgetVsActual.length > 0 
+    ? (budgetVsActual.filter(b => !b.over).length / budgetVsActual.length) * 100
+    : 100
+  const regretFactor = totalSpent > 0 ? (1 - totalRegretAmt / totalSpent) * 100 : 100
+  
+  const healthScore = Math.round((Math.max(0, savingsRate) * 0.4) + (budgetAdherence * 0.4) + (regretFactor * 0.2))
 
   return {
     data: {
-      categoryData
+      totalSpent,
+      avgDailySpend,
+      highestDayAmt,
+      lowestDayAmt,
+      mostExpensiveCategory,
+      mostFrequentCategory,
+      pctChange,
+      categoryData,
+      trendData,
+      insights,
+      suggestions,
+      healthScore,
+      budgetVsActual,
+      totalRegretAmt
     },
     error: null
   }

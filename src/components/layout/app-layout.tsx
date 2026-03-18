@@ -4,6 +4,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { WalletCards, LogOut } from "lucide-react"
 import { signout } from "@/app/(auth)/auth-actions"
 import { Button } from "@/components/ui/button"
+import { QuickAddFAB } from "@/components/quick-add/quick-add-fab"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -37,6 +38,7 @@ export function AppLayout({ children, userName }: AppLayoutProps) {
         </main>
       </div>
       <BottomNav />
+      <QuickAddFAB />
     </div>
   )
 }

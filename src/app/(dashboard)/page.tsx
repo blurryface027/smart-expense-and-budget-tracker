@@ -4,6 +4,8 @@ import { getDashboardStats } from "@/lib/actions/dashboard"
 import { getTransactions } from "@/lib/actions/transactions"
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts"
 import { SpendingInsights } from "@/components/dashboard/spending-insights"
+import { DailySpendingCard } from "@/components/dashboard/daily-spending-card"
+import { RegretPrompt } from "@/components/dashboard/regret-prompt"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardPage() {
@@ -25,10 +27,12 @@ export default async function DashboardPage() {
     nowIST.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", hour12: false }),
     10
   )
+  // 5-12: morning | 12-17: afternoon | 17-21: evening | 21-24 & 0-5: night
   const greeting =
-    hourIST < 12 ? "Good morning" :
-    hourIST < 17 ? "Good afternoon" :
-    "Good evening"
+    hourIST >= 5 && hourIST < 12 ? "Good morning" :
+    hourIST >= 12 && hourIST < 17 ? "Good afternoon" :
+    hourIST >= 17 && hourIST < 21 ? "Good evening" :
+    "Good night"
 
   const recentTransactions = transactions?.slice(0, 5) || []
 
@@ -90,6 +94,12 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Spending Card */}
+      <DailySpendingCard />
+
+      {/* Regret Prompts for eligible transactions */}
+      <RegretPrompt />
 
       {/* Spending Insights */}
       <SpendingInsights />
