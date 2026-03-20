@@ -68,12 +68,12 @@ export function RangeFilter() {
         }}
         className="w-full max-w-sm"
       >
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="daily">Daily</TabsTrigger>
-          <TabsTrigger value="weekly">Weekly</TabsTrigger>
-          <TabsTrigger value="monthly" className="text-[10px] sm:text-xs">Monthly (Daily Breakdown)</TabsTrigger>
-          <TabsTrigger value="yearly" className="text-[10px] sm:text-xs">Yearly (Month-wise Overview)</TabsTrigger>
-          <TabsTrigger value="custom">Custom</TabsTrigger>
+        <TabsList className="flex w-full justify-start overflow-x-auto scrollbar-hide bg-muted/50 p-1 h-11 items-center whitespace-nowrap">
+          <TabsTrigger value="daily" className="flex-shrink-0">Daily</TabsTrigger>
+          <TabsTrigger value="weekly" className="flex-shrink-0">Weekly</TabsTrigger>
+          <TabsTrigger value="monthly" className="flex-shrink-0">Monthly</TabsTrigger>
+          <TabsTrigger value="yearly" className="flex-shrink-0">Yearly</TabsTrigger>
+          <TabsTrigger value="custom" className="flex-shrink-0">Custom</TabsTrigger>
         </TabsList>
       </Tabs>
 
