@@ -1,8 +1,9 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { format } from "date-fns"
 
-export type AnalyticsRange = 'daily' | 'weekly' | 'monthly' | 'custom'
+export type AnalyticsRange = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
 
 interface AnalyticsParams {
   range?: AnalyticsRange
@@ -60,6 +61,13 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
     // Comparison period: previous 7 days
     prevFromDate = new Date(fromDate.getTime() - 7 * 24 * 60 * 60 * 1000)
     prevToDate = new Date(fromDate.getTime() - 1)
+  } else if (range === 'yearly') {
+    // Current year start (Jan 1, 00:00:00 IST)
+    fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), 0, 1) - IST_OFFSET_MS)
+    // Comparison: Previous year (Jan 1 to same point last year)
+    prevFromDate = new Date(Date.UTC(nowIST.getUTCFullYear() - 1, 0, 1) - IST_OFFSET_MS)
+    // Slightly better: exact same date last year
+    prevToDate = new Date(Date.UTC(nowIST.getUTCFullYear() - 1, nowIST.getUTCMonth(), nowIST.getUTCDate(), 23, 59, 59, 999) - IST_OFFSET_MS)
   } else {
     // monthly (default)
     fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1) - IST_OFFSET_MS)
@@ -99,8 +107,8 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   }
 
   // ── Processing ──────────────────────────────────────────────────────
-  const currentPeriodTx = (transactions ?? []).filter(t => new Date(t.date) >= fromDate)
-  const previousPeriodTx = (transactions ?? []).filter(t => {
+  const currentPeriodTx = (transactions ?? []).filter((t: any) => new Date(t.date) >= fromDate)
+  const previousPeriodTx = (transactions ?? []).filter((t: any) => {
     const d = new Date(t.date)
     return d >= prevFromDate && d <= prevToDate
   })
@@ -110,17 +118,17 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   }
 
   // Basic Stats
-  const currentExpenses = currentPeriodTx.filter(t => t.type === 'expense')
-  const prevExpenses = previousPeriodTx.filter(t => t.type === 'expense')
+  const currentExpenses = currentPeriodTx.filter((t: any) => t.type === 'expense')
+  const prevExpenses = previousPeriodTx.filter((t: any) => t.type === 'expense')
 
-  const totalSpent = currentExpenses.reduce((sum, t) => sum + Number(t.amount), 0)
+  const totalSpent = currentExpenses.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
   
   if (process.env.NODE_ENV === "development") {
     console.log(`[ANALYTICS DEBUG] Total Spent Computed: ₹${totalSpent}`);
-    console.log(`[ANALYTICS DEBUG] Current TX IDs: ${currentPeriodTx.map(t => t.id).join(', ')}`);
+    console.log(`[ANALYTICS DEBUG] Current TX IDs: ${currentPeriodTx.map((t: any) => t.id).join(', ')}`);
   }
 
-  const prevTotalSpent = prevExpenses.reduce((sum, t) => sum + Number(t.amount), 0)
+  const prevTotalSpent = prevExpenses.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
   
   const pctChange = prevTotalSpent > 0 ? ((totalSpent - prevTotalSpent) / prevTotalSpent) * 100 : 0
 
@@ -130,7 +138,7 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
 
   // Highest & Lowest Day (only if multiple days)
   const dailyMap: Record<string, number> = {}
-  currentExpenses.forEach(t => {
+  currentExpenses.forEach((t: any) => {
     // Group using IST date string to avoid date shifting
     const tDateIST = new Date(new Date(t.date).getTime() + IST_OFFSET_MS)
     const dStr = tDateIST.toISOString().split('T')[0] // This will be the IST date part
@@ -142,7 +150,7 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
 
   // Categories
   const catStats: Record<string, { total: number, count: number, name: string, color: string }> = {}
-  currentExpenses.forEach(t => {
+  currentExpenses.forEach((t: any) => {
     const cat = t.category as any
     const name = (Array.isArray(cat) ? cat[0]?.name : cat?.name) || "Other"
     const color = (Array.isArray(cat) ? cat[0]?.color : cat?.color) || "#64748b"
@@ -179,6 +187,22 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
             total: dailyMap[dStr] || 0
         })
     }
+  } else if (range === 'yearly') {
+    const monthlyMap: Record<string, number> = {}
+    currentExpenses.forEach((t: any) => {
+      // Use IST date to match other charts
+      const tDateIST = new Date(new Date(t.date).getTime() + IST_OFFSET_MS)
+      const mStr = format(tDateIST, "MMM")
+      monthlyMap[mStr] = (monthlyMap[mStr] || 0) + Number(t.amount)
+    })
+    
+    const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    allMonths.forEach(m => {
+        trendData.push({
+            name: m,
+            total: monthlyMap[m] || 0
+        })
+    })
   } else {
     // monthly or custom (Date 1 to end of period)
     const tempDate = new Date(fromDate.getTime() + IST_OFFSET_MS) // Start at early morning IST
@@ -204,7 +228,7 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   // Weekend vs Weekday
   let weekendSpend = 0
   let weekdaySpend = 0
-  currentExpenses.forEach(t => {
+  currentExpenses.forEach((t: any) => {
     const day = new Date(t.date).getDay()
     if (day === 0 || day === 6) weekendSpend += Number(t.amount)
     else weekdaySpend += Number(t.amount)
@@ -219,12 +243,12 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   // Category Spikes
   for (const cat of sortedByTotal) {
     const prevCatAmt = prevExpenses
-      .filter(t => {
+      .filter((t: any) => {
         const tCat = t.category as any
         const tCatName = (Array.isArray(tCat) ? tCat[0]?.name : tCat?.name) || "Other"
         return tCatName === cat.name
       })
-      .reduce((s, t) => s + Number(t.amount), 0)
+      .reduce((s: number, t: any) => s + Number(t.amount), 0)
     
     if (prevCatAmt > 0 && cat.total > prevCatAmt * 1.2) {
       const p = Math.round(((cat.total - prevCatAmt) / prevCatAmt) * 100)
@@ -239,11 +263,11 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   }
 
   // ── Regret Analysis ─────────────────────────────────────────────────
-  const regretMap = new Set((regretData ?? []).filter(r => r.regretted).map(r => r.transaction_id))
+  const regretMap = new Set((regretData ?? []).filter((r: any) => r.regretted).map((r: any) => r.transaction_id))
   let totalRegretAmt = 0
   const catRegret: Record<string, number> = {}
 
-  currentExpenses.forEach(t => {
+  currentExpenses.forEach((t: any) => {
     if (regretMap.has((t as any).id)) {
       totalRegretAmt += Number(t.amount)
       const cat = t.category as any
@@ -287,10 +311,10 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
 
   // ── Financial Health Score ───────────────────────────────────────────
   // Simple algorithm: Savings Rate (Income vs Expense) + Budget Adherence + Regret Factor
-  const totalIncome = currentPeriodTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+  const totalIncome = currentPeriodTx.filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + Number(t.amount), 0)
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalSpent) / totalIncome) * 100 : 0
   const budgetAdherence = budgetVsActual.length > 0 
-    ? (budgetVsActual.filter(b => !b.over).length / budgetVsActual.length) * 100
+    ? (budgetVsActual.filter((b: any) => !b.over).length / budgetVsActual.length) * 100
     : 100
   const regretFactor = totalSpent > 0 ? (1 - totalRegretAmt / totalSpent) * 100 : 100
   

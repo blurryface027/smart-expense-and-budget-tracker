@@ -106,7 +106,9 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base sm:text-lg">Spending Trend</CardTitle>
-                <CardDescription>Daily breakdown for the selected range.</CardDescription>
+                <CardDescription>
+                  {range === 'yearly' ? 'Monthly overview' : 'Daily breakdown'} for the selected period.
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
