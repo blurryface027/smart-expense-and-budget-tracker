@@ -49,47 +49,47 @@ export default async function DashboardPage() {
       
       {/* Stats Cards — 1 col on mobile, 3 on large */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="rounded-xl shadow-sm border-muted">
+        <Card className="rounded-xl shadow-sm border-muted overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <Wallet className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold truncate">
               ₹{stats?.totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">
               {stats?.balanceChangePercent && stats.balanceChangePercent > 0 ? "+" : ""}
               {stats?.balanceChangePercent ? stats.balanceChangePercent.toFixed(1) : "0"}% from last month
             </p>
           </CardContent>
         </Card>
         
-        <Card className="rounded-xl shadow-sm border-muted">
+        <Card className="rounded-xl shadow-sm border-muted overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
-            <ArrowUpIcon className="h-4 w-4 text-emerald-500" />
+            <ArrowUpIcon className="h-4 w-4 text-emerald-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">
+          <CardContent className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold text-emerald-500 truncate">
               ₹{stats?.currentMonthIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">
               Total income this month
             </p>
           </CardContent>
         </Card>
         
-        <Card className="rounded-xl shadow-sm border-muted sm:col-span-2 lg:col-span-1">
+        <Card className="rounded-xl shadow-sm border-muted sm:col-span-2 lg:col-span-1 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
-            <ArrowDownIcon className="h-4 w-4 text-rose-500" />
+            <ArrowDownIcon className="h-4 w-4 text-rose-500 shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-rose-500">
+          <CardContent className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold text-rose-500 truncate">
               ₹{stats?.currentMonthExpense.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">
               Total expenses this month
             </p>
           </CardContent>

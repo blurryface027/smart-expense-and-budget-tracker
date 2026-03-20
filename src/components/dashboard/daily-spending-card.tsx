@@ -60,16 +60,16 @@ export async function DailySpendingCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex items-end justify-between gap-2">
-          <div>
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 min-w-0">
+          <div className="min-w-0">
             <p className="text-xs text-muted-foreground mb-0.5">You can spend today</p>
-            <p className="text-2xl font-bold">
+            <p className="text-xl sm:text-2xl font-bold truncate">
               ₹{dailyLimit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-right ml-auto min-w-0">
             <p className="text-xs text-muted-foreground mb-0.5">Spent today</p>
-            <p className={`text-sm font-semibold ${status === "overspent" ? "text-rose-500" : status === "risky" ? "text-amber-500" : "text-foreground"}`}>
+            <p className={`text-sm font-semibold truncate ${status === "overspent" ? "text-rose-500" : status === "risky" ? "text-amber-500" : "text-foreground"}`}>
               ₹{todaySpent.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>

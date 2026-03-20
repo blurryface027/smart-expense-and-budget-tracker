@@ -47,46 +47,46 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
       {/* Overview Stats (Injected into existing style cards) */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-xl shadow-sm border-muted">
+        <Card className="rounded-xl shadow-sm border-muted overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Total Spent</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">₹{analytics.totalSpent.toLocaleString('en-IN')}</div>
-            <div className={`flex items-center gap-1 text-xs mt-1 ${analytics.pctChange > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-              {analytics.pctChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+          <CardContent className="min-w-0">
+            <div className="text-xl font-bold truncate">₹{analytics.totalSpent.toLocaleString('en-IN')}</div>
+            <div className={`flex items-center gap-1 text-xs mt-1 truncate ${analytics.pctChange > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+              {analytics.pctChange > 0 ? <TrendingUp className="h-3 w-3 shrink-0" /> : <TrendingDown className="h-3 w-3 shrink-0" />}
               {Math.abs(analytics.pctChange).toFixed(1)}% vs prev period
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-sm border-muted">
+        <Card className="rounded-xl shadow-sm border-muted overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Avg Daily Spend</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">₹{Math.round(analytics.avgDailySpend).toLocaleString('en-IN')}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Based on {range} data</p>
+          <CardContent className="min-w-0">
+            <div className="text-xl font-bold truncate">₹{Math.round(analytics.avgDailySpend).toLocaleString('en-IN')}</div>
+            <p className="text-[10px] text-muted-foreground mt-1 truncate">Based on {range} data</p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-sm border-muted">
+        <Card className="rounded-xl shadow-sm border-muted overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Top Category</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <div className="text-xl font-bold truncate leading-tight">{analytics.mostExpensiveCategory}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Most expensive</p>
+            <p className="text-[10px] text-muted-foreground mt-1 truncate">Most expensive</p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl shadow-sm border-muted">
+        <Card className="rounded-xl shadow-sm border-muted overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Highest Day</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">₹{analytics.highestDayAmt.toLocaleString('en-IN')}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Single day peak</p>
+          <CardContent className="min-w-0">
+            <div className="text-xl font-bold truncate">₹{analytics.highestDayAmt.toLocaleString('en-IN')}</div>
+            <p className="text-[10px] text-muted-foreground mt-1 truncate">Single day peak</p>
           </CardContent>
         </Card>
       </div>

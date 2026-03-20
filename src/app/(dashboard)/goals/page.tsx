@@ -68,11 +68,11 @@ export default async function GoalsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4 flex-1 flex flex-col">
                   {/* Progress Header */}
-                  <div className="flex items-baseline justify-between mt-2">
-                    <div className="text-2xl font-bold">
+                  <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mt-2 gap-0.5 sm:gap-2 overflow-hidden">
+                    <div className="text-xl sm:text-2xl font-bold truncate">
                       ₹{goal.current_amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                     </div>
-                    <div className="text-sm text-muted-foreground whitespace-nowrap">
+                    <div className="text-[11px] sm:text-sm text-muted-foreground truncate">
                       target: ₹{goal.target_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                   </div>
@@ -80,19 +80,19 @@ export default async function GoalsPage() {
                   {/* Progress Bar Area */}
                   <div className="space-y-1">
                     <Progress value={percentage} className="h-2" />
-                    <div className="flex justify-between text-[11px] mt-2">
-                      <div className="flex items-center gap-1 font-semibold">
-                        {percentage.toFixed(1)}%
+                    <div className="flex flex-col sm:flex-row justify-between text-[11px] mt-2 gap-1.5 sm:gap-2 overflow-hidden">
+                      <div className="flex items-center gap-1 font-semibold min-w-0">
+                        <span className="shrink-0">{percentage.toFixed(1)}%</span>
                         {smartData.pace === "ahead" ? (
-                          <span className="text-primary flex items-center ml-1"><TrendingUp className="h-3 w-3 inline mr-0.5" /> Ahead of schedule</span>
+                          <span className="text-primary flex items-center ml-1 truncate"><TrendingUp className="h-3 w-3 shrink-0 mr-0.5" /> Ahead of schedule</span>
                         ) : smartData.pace === "behind" ? (
-                          <span className="text-rose-500 flex items-center ml-1"><TrendingDown className="h-3 w-3 inline mr-0.5" /> Behind by ₹{Math.round(smartData.behindAmount).toLocaleString()}</span>
+                          <span className="text-rose-500 flex items-center ml-1 truncate"><TrendingDown className="h-3 w-3 shrink-0 mr-0.5" /> Behind by ₹{Math.round(smartData.behindAmount).toLocaleString()}</span>
                         ) : (
-                           <span className="text-muted-foreground flex items-center ml-1 opacity-70">On track</span>
+                           <span className="text-muted-foreground flex items-center ml-1 opacity-70 truncate">On track</span>
                         )}
                       </div>
                       {goal.deadline && (
-                        <span className="text-muted-foreground truncate ml-4 text-right">
+                        <span className="text-muted-foreground truncate text-left sm:text-right">
                           <span className="hidden sm:inline">Target: </span>{format(new Date(goal.deadline), "MMM d, yyyy")}
                         </span>
                       )}

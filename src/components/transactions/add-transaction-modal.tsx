@@ -144,7 +144,7 @@ export function AddTransactionModal() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-full max-w-[425px] mx-auto">
+        <DialogContent className="w-full sm:max-w-[425px] mx-auto">
           <DialogHeader>
             <DialogTitle>Add New Transaction</DialogTitle>
             <DialogDescription>

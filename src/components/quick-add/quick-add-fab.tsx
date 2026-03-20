@@ -173,7 +173,7 @@ export function QuickAddFAB() {
 
       {/* ── Compact bottom sheet / modal ──────────────────────────────────── */}
       {open && (
-        <div className="fixed bottom-24 right-4 z-50 w-full max-w-sm rounded-2xl border bg-card shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200">
+        <div className="fixed bottom-24 left-4 right-4 z-50 w-auto md:left-auto md:right-4 md:w-full max-w-sm rounded-2xl border bg-card shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
             <div className="flex items-center gap-2">
