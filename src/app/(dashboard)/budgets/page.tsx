@@ -22,6 +22,8 @@ const DynamicIcon = ({ name, className }: { name?: string; className?: string })
   return <Icon className={className} />
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function BudgetsPage() {
   const { data: budgets } = await getBudgets()
 

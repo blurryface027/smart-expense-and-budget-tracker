@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useRef, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Search } from "lucide-react"
 import { toast } from "sonner"
+
+import { useRouter } from "next/navigation"
 
 import {
   Dialog,
@@ -32,7 +34,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 import { budgetSchema, type BudgetFormValues } from "@/lib/schemas/budget.schema"
-import { addBudget } from "@/lib/actions/budgets"
+import { addBudget, getBudgetStatus } from "@/lib/actions/budgets"
 import { getCategories } from "@/lib/actions/transactions"
 import * as LucideIcons from "lucide-react"
 
@@ -49,30 +51,43 @@ const DynamicIcon = ({ name, className }: { name?: string, className?: string })
 }
 
 export function AddBudgetModal() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [categories, setCategories] = useState<any[]>([])
   const [categorySearch, setCategorySearch] = useState("")
+  const [budgetMap, setBudgetMap] = useState<Record<string, any>>({})
+  const prevCategoryId = useRef<string>("")
 
   const form = useForm<BudgetFormValues>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
       categoryId: "",
-      limitAmount: "" as any /* eslint-disable-line @typescript-eslint/no-explicit-any */,
+      limitAmount: "" as any,
       period: "monthly",
     },
   })
 
   useEffect(() => {
-    async function fetchCats() {
-      const { data } = await getCategories()
-      if (data) {
-        // Already sorted alphabetically by the server query
-        setCategories(data.filter(c => c.type === 'expense'))
-      }
+    async function fetchDetails() {
+      const [catRes, budgetRes] = await Promise.all([
+        getCategories(),
+        getBudgetStatus()
+      ])
+      if (catRes.data) setCategories(catRes.data.filter(c => c.type === 'expense'))
+      if (budgetRes.data) setBudgetMap(budgetRes.data)
     }
-    fetchCats()
-  }, [])
+    fetchDetails()
+  }, [open])
+
+  const selectedCategoryId = form.watch("categoryId")
+
+  useEffect(() => {
+    if (selectedCategoryId && selectedCategoryId !== prevCategoryId.current && budgetMap[selectedCategoryId]) {
+      form.setValue("limitAmount", budgetMap[selectedCategoryId].limit)
+      prevCategoryId.current = selectedCategoryId
+    }
+  }, [selectedCategoryId, budgetMap, form])
 
   async function onSubmit(data: BudgetFormValues) {
     startTransition(async () => {
@@ -81,9 +96,15 @@ export function AddBudgetModal() {
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success("Budget added successfully")
+        toast.success(result.isUpdate ? "Budget updated successfully" : "Budget added successfully")
         setOpen(false)
         form.reset()
+        // Force refresh
+        router.refresh()
+        // As a last resort for stuck cache
+        setTimeout(() => {
+          router.refresh()
+        }, 500)
       }
     })
   }

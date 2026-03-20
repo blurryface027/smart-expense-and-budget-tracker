@@ -43,18 +43,17 @@ export async function getSpendingInsights(): Promise<{
   if (!user) return { insights: [], hasEnoughData: false }
 
   const now = new Date()
-  // IST offset (UTC+5:30)
   const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
   const nowIST = new Date(now.getTime() + IST_OFFSET_MS)
   const currentYear = nowIST.getUTCFullYear()
   const currentMonth = nowIST.getUTCMonth()
 
-  // Date range: 2 months of data — use IST-based start of prev month converted to UTC
   const prevMonthYear  = currentMonth === 0 ? currentYear - 1 : currentYear
   const prevMonthIndex = currentMonth === 0 ? 11 : currentMonth - 1
   const twoMonthsAgo = new Date(Date.UTC(prevMonthYear, prevMonthIndex, 1) - IST_OFFSET_MS).toISOString()
 
-  const [{ data: transactions }, { data: budgets }] = await Promise.all([
+  // 1. Fetch Transactions, Budgets, and Goals
+  const [{ data: transactions }, { data: budgets }, { data: goals }] = await Promise.all([
     supabase
       .from("transactions")
       .select("amount, type, date, category_id, category:categories(name)")
@@ -65,148 +64,205 @@ export async function getSpendingInsights(): Promise<{
       .from("budgets")
       .select("category_id, limit_amount")
       .eq("user_id", user.id),
+    supabase
+      .from("goals")
+      .select("*")
+      .eq("user_id", user.id)
+      .gt("target_amount", 0)
   ])
 
-  if (!transactions || transactions.length === 0) {
-    return { insights: [], hasEnoughData: false }
-  }
-
-  // ── Group expenses by category for current & previous month ─────────────
-  // Use IST-based month boundaries
+  const raw: (Insight & { score: number })[] = []
+  
+  // ── 2. Process Data for Insights ──────────────────────────────────────────
   const currentStart = new Date(Date.UTC(currentYear, currentMonth, 1) - IST_OFFSET_MS)
   const prevStart    = new Date(Date.UTC(prevMonthYear, prevMonthIndex, 1) - IST_OFFSET_MS)
-  const prevEnd      = new Date(Date.UTC(currentYear, currentMonth, 1) - IST_OFFSET_MS - 1)  // last ms of prev IST month
+  const prevEnd      = new Date(Date.UTC(currentYear, currentMonth, 1) - IST_OFFSET_MS - 1)
 
   type CatEntry = { name: string; current: number; previous: number }
   const catMap: Record<string, CatEntry> = {}
+  let totalCurrent = 0
+  let totalPrevious = 0
 
-  for (const t of transactions) {
-    const tDate = new Date(t.date)
-    const catId  = t.category_id
-    const cat    = t.category as any
-    const name   = (Array.isArray(cat) ? cat[0]?.name : cat?.name) || "Other"
-    const amount = Number(t.amount)
+  if (transactions) {
+    for (const t of transactions) {
+      const tDate = new Date(t.date)
+      const catId  = t.category_id
+      const cat    = t.category as any
+      const name   = (Array.isArray(cat) ? cat[0]?.name : cat?.name) || "Other"
+      const amount = Number(t.amount)
 
-    if (!catMap[catId]) catMap[catId] = { name, current: 0, previous: 0 }
+      if (!catMap[catId]) catMap[catId] = { name, current: 0, previous: 0 }
 
-    if (tDate >= currentStart) {
-      catMap[catId].current += amount
-    } else if (tDate >= prevStart && tDate <= prevEnd) {
-      catMap[catId].previous += amount
+      if (tDate >= currentStart) {
+        catMap[catId].current += amount
+        totalCurrent += amount
+      } else if (tDate >= prevStart && tDate <= prevEnd) {
+        catMap[catId].previous += amount
+        totalPrevious += amount
+      }
     }
   }
 
-  // ── How many days into the current IST month are we? (for projection) ───
+  // ── 3. Goal-Based Insights (Highest Priority) ───────────────────────────
+  if (goals && goals.length > 0) {
+    // Sort goals by progress and deadline
+    const activeGoal = goals
+      .filter(g => Number(g.current_amount) < Number(g.target_amount))
+      .sort((a, b) => {
+        const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Infinity
+        const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Infinity
+        return aDeadline - bDeadline
+      })[0]
+
+    if (activeGoal) {
+      const remaining = Number(activeGoal.target_amount) - Number(activeGoal.current_amount)
+      
+      // If we have some spending data, suggest categories to cut to reach goal faster
+      const topSpendingCat = Object.values(catMap).sort((a, b) => b.current - a.current)[0]
+      if (topSpendingCat && topSpendingCat.current > 1000) {
+        const tenPercent = topSpendingCat.current * 0.1
+        const daysEarlier = Math.floor(tenPercent / (remaining / 30)) // Simplified estimation
+        
+        raw.push({
+          id: `goal-boost-${activeGoal.id}`,
+          severity: "success",
+          score: 1000,
+          title: `Boost your ${activeGoal.title} goal`,
+          message: `If you reduce ₹${Math.round(tenPercent).toLocaleString()} from ${topSpendingCat.name} this month, you'll reach your goal significantly faster.`,
+          suggestion: "Consistent small cuts are more effective than big one-time savings."
+        })
+      } else {
+        raw.push({
+          id: `goal-track-${activeGoal.id}`,
+          severity: "info",
+          score: 950,
+          title: `Progress on ${activeGoal.title}`,
+          message: `You're working towards ₹${activeGoal.target_amount.toLocaleString()}. Keep tracking every expense to stay on top of your savings.`,
+          suggestion: "Set a daily spending limit to ensure money is left for your goal."
+        })
+      }
+    }
+  }
+
+  // ── 4. Spending Pattern Insights (Existing Logic) ───────────────────────
   const daysInMonth   = new Date(Date.UTC(currentYear, currentMonth + 1, 1) - 1).getUTCDate()
   const daysPassed    = nowIST.getUTCDate()
   const projFactor    = daysInMonth / Math.max(daysPassed, 1)
 
-  // ── Build budget map ─────────────────────────────────────────────────────
   const budgetMap: Record<string, number> = {}
   for (const b of budgets ?? []) {
     budgetMap[b.category_id] = Number(b.limit_amount)
   }
 
-  // ── Generate raw insights ────────────────────────────────────────────────
-  const raw: (Insight & { score: number })[] = []
-
   for (const [catId, entry] of Object.entries(catMap)) {
     const { name, current, previous } = entry
     const budget = budgetMap[catId]
 
-    // 1. Month-over-month increase ≥ 20%
     if (previous > 0) {
       const pctChange = ((current - previous) / previous) * 100
-
-      if (pctChange >= 50) {
-        raw.push({
-          id: `mom-spike-${catId}`,
-          severity: "danger",
-          score: 90 + pctChange / 100,
-          title: `${name} spending spiked`,
-          message: `You've spent ${pctChange.toFixed(0)}% more on ${name} this month (₹${current.toLocaleString("en-IN", { minimumFractionDigits: 2 })}) vs last month (₹${previous.toLocaleString("en-IN", { minimumFractionDigits: 2 })}).`,
-          suggestion: getSuggestion(name),
-        })
-      } else if (pctChange >= 20) {
+      if (pctChange >= 20) {
         raw.push({
           id: `mom-increase-${catId}`,
           severity: "warning",
-          score: 60 + pctChange / 10,
-          title: `Higher ${name} spending`,
-          message: `You've spent ${pctChange.toFixed(0)}% more on ${name} compared to last month.`,
+          score: 800 + pctChange,
+          title: `${name} spending is up`,
+          message: `You've spent ₹${current.toLocaleString()} on ${name} so far. That's ${pctChange.toFixed(0)}% more than this time last month.`,
           suggestion: getSuggestion(name),
         })
       }
     }
 
-    // 2. Budget proximity checks (only if a budget is set)
     if (budget && budget > 0) {
       const usedPct = (current / budget) * 100
-
       if (current >= budget) {
-        // Already exceeded
         raw.push({
           id: `budget-exceeded-${catId}`,
           severity: "danger",
-          score: 100,
+          score: 900,
           title: `${name} budget exceeded`,
-          message: `You've used ₹${current.toLocaleString("en-IN", { minimumFractionDigits: 2 })} of your ₹${budget.toLocaleString("en-IN", { minimumFractionDigits: 2 })} limit — further expenses are blocked.`,
+          message: `You've passed your ₹${budget.toLocaleString()} limit for ${name}. Try to pause non-essential spending here.`,
         })
       } else if (usedPct >= 80) {
-        // Close to limit
-        const remaining = budget - current
         raw.push({
           id: `budget-near-${catId}`,
           severity: "warning",
-          score: 80,
+          score: 750,
           title: `${name} budget almost full`,
-          message: `You've used ${usedPct.toFixed(0)}% of your ${name} budget. Only ₹${remaining.toLocaleString("en-IN", { minimumFractionDigits: 2 })} remaining.`,
+          message: `You've used ${usedPct.toFixed(0)}% of your ₹${budget.toLocaleString()} budget for ${name}.`,
           suggestion: getSuggestion(name),
         })
-      }
-
-      // 3. Projection: at this spending rate, will you exceed by month-end?
-      const projected = current * projFactor
-      if (projected > budget && current < budget && daysPassed < daysInMonth) {
-        raw.push({
-          id: `budget-projected-${catId}`,
-          severity: "warning",
-          score: 70,
-          title: `${name} may exceed budget`,
-          message: `At your current rate you're projected to spend ₹${projected.toLocaleString("en-IN", { minimumFractionDigits: 2 })} on ${name} this month, exceeding your ₹${budget.toLocaleString("en-IN", { minimumFractionDigits: 2 })} limit.`,
-          suggestion: getSuggestion(name),
-        })
-      }
-    } else {
-      // No budget: only warn if very high month-over-month with no cap
-      if (previous === 0 && current > 0 && daysPassed <= 7) {
-        // Significant spend in first week with no last-month baseline — low priority, skip
       }
     }
   }
 
-  // 4. Positive insight: if this month's total is less than last month's (well done!)
-  const totalCurrent  = Object.values(catMap).reduce((s, e) => s + e.current,  0)
-  const totalPrevious = Object.values(catMap).reduce((s, e) => s + e.previous, 0)
-  if (totalPrevious > 0 && totalCurrent < totalPrevious * 0.9) {
+  // Savings win
+  if (totalPrevious > 0 && totalCurrent < totalPrevious * 0.9 && totalCurrent > 0) {
     const saved = totalPrevious - totalCurrent
     raw.push({
       id: "overall-savings",
       severity: "success",
-      score: 50,
-      title: "Great spending control! 🎉",
-      message: `You're spending ${((1 - totalCurrent / totalPrevious) * 100).toFixed(0)}% less than last month. You've saved approximately ₹${saved.toLocaleString("en-IN", { minimumFractionDigits: 2 })} so far.`,
+      score: 850,
+      title: "Excellent budget control! 🎉",
+      message: `You're spending significantly less than last month. You've saved about ₹${saved.toLocaleString()} so far!`,
     })
   }
 
-  // Sort by score descending, take top 3
-  const insights = raw
+  // ── 5. Category Optimization (Fallback Case) ───────────────────────────
+  if (raw.length < 2) {
+    const topCat = Object.values(catMap).sort((a, b) => b.current - a.current)[0]
+    if (topCat && topCat.current > 500) {
+      raw.push({
+        id: `optimize-${topCat.name}`,
+        severity: "info",
+        score: 500,
+        title: `Optimize ${topCat.name} spend`,
+        message: `${topCat.name} is your highest spending category this month at ₹${topCat.current.toLocaleString()}.`,
+        suggestion: `A simple 10% reduction here would save you ₹${Math.round(topCat.current * 0.1).toLocaleString()} for other goals.`
+      })
+    }
+  }
+
+  // ── 6. Fallback Smart Tips (Guarantees Content) ──────────────────────────
+  const fallbacks: Insight[] = [
+    {
+      id: "fb-1",
+      severity: "info",
+      title: "Set a daily limit",
+      message: "Try setting a daily spending limit to stay on track without checking your budget constantly.",
+      suggestion: "Go to your dashboard card to see your current recommended limit."
+    },
+    {
+      id: "fb-2",
+      severity: "success",
+      title: "Track small expenses",
+      message: "Reducing small daily expenses like coffee or snacks can significantly improve your monthly savings.",
+      suggestion: "Small wins add up to big goals!"
+    },
+    {
+      id: "fb-3",
+      severity: "info",
+      title: "Unlock smarter insights",
+      message: "The more you track, the smarter these insights get. Keep logging your transactions and reflections.",
+      suggestion: "Try using the Quick Add button for faster tracking."
+    }
+  ]
+
+  let finalInsights = raw
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map(({ score: _score, ...rest }) => rest)
 
+  // Fill up with fallbacks if needed
+  let i = 0
+  while (finalInsights.length < 3 && i < fallbacks.length) {
+    if (!finalInsights.find(fi => fi.title === fallbacks[i].title)) {
+      finalInsights.push(fallbacks[i])
+    }
+    i++
+  }
+
   return {
-    insights,
-    hasEnoughData: transactions.length >= 2,
+    insights: finalInsights,
+    hasEnoughData: true, // Always true now to prevent empty state UI
   }
 }

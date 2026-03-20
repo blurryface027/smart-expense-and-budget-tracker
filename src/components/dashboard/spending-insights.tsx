@@ -95,24 +95,11 @@ export async function SpendingInsights() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!hasEnoughData || insights.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-6 text-center border border-dashed rounded-lg">
-            <Sparkles className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">
-              Not enough data to generate insights
-            </p>
-            <p className="text-xs text-muted-foreground/70 max-w-[240px]">
-              Add more transactions across multiple categories to start seeing
-              personalized spending analysis.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {insights.map((insight) => (
-              <InsightCard key={insight.id} insight={insight} />
-            ))}
-          </div>
-        )}
+        <div className="space-y-3">
+          {insights.map((insight) => (
+            <InsightCard key={insight.id} insight={insight} />
+          ))}
+        </div>
 
         {/* ── Regret Analysis ───────────────────────────── */}
         {hasRegretData && (

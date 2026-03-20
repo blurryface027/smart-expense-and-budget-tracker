@@ -21,25 +21,47 @@ export async function addBudget(data: BudgetFormValues) {
     return { error: "Not authenticated" }
   }
 
-  const { error } = await supabase.from("budgets").insert({
-    user_id: user.id,
-    category_id: parsed.data.categoryId,
-    limit_amount: parsed.data.limitAmount,
-    period: parsed.data.period,
-  })
+  // Check if budget for this category already exists
+  const { data: existing } = await supabase
+    .from("budgets")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("category_id", parsed.data.categoryId)
+    .maybeSingle()
 
-  // Check for unique constraint error (user already has a budget for this category)
-  if (error?.code === "23505") {
-    return { error: "A budget for this category already exists" }
+  let error;
+  if (existing) {
+    // Update existing budget
+    const { error: updateError } = await supabase
+      .from("budgets")
+      .update({
+        limit_amount: parsed.data.limitAmount,
+        period: parsed.data.period,
+      })
+      .eq("id", existing.id)
+    error = updateError
+  } else {
+    // Insert new budget
+    const { error: insertError } = await supabase.from("budgets").insert({
+      user_id: user.id,
+      category_id: parsed.data.categoryId,
+      limit_amount: parsed.data.limitAmount,
+      period: parsed.data.period,
+    })
+    error = insertError
   }
 
   if (error) {
     return { error: error.message }
   }
 
+  // Multi-layer revalidation
   revalidatePath("/budgets")
-  revalidatePath("/")
-  return { success: true }
+  revalidatePath("/budgets", 'page')
+  revalidatePath("/(dashboard)/budgets", 'page')
+  revalidatePath("/", 'layout')
+  
+  return { success: true, isUpdate: !!existing }
 }
 
 export async function getBudgets() {

@@ -86,8 +86,8 @@ export async function DailySpendingCard() {
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>
               {status === "overspent"
-                ? `Over by ₹${Math.abs(todayRemaining - 0).toLocaleString("en-IN", { minimumFractionDigits: 0 })}`
-                : `₹${todayRemaining.toLocaleString("en-IN", { minimumFractionDigits: 2 })} remaining`}
+                ? `Over by ₹${(todaySpent - dailyLimit).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : `₹${todayRemaining.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} remaining`}
             </span>
             <span>{remainingDays} day{remainingDays !== 1 ? "s" : ""} left this month</span>
           </div>

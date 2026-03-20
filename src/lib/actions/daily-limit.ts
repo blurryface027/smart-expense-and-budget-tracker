@@ -76,7 +76,7 @@ export async function getDailySpendingLimit() {
 
   // Status calculation
   let status: "safe" | "risky" | "overspent"
-  if (todaySpent > dailyLimit && dailyLimit > 0) {
+  if (todaySpent > dailyLimit) {
     status = "overspent"
   } else if (dailyLimit > 0 && todaySpent >= dailyLimit * 0.75) {
     status = "risky"

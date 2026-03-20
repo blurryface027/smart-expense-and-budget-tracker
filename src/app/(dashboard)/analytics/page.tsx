@@ -14,12 +14,20 @@ import { ArrowDownIcon, ArrowUpIcon, Info, Sparkles, TrendingUp, TrendingDown, H
 import { Suspense } from "react"
 
 type Props = {
-  searchParams: Promise<{ range?: string }>
+  searchParams: Promise<{ range?: string; startDate?: string; endDate?: string }>
 }
 
 export default async function AnalyticsPage({ searchParams }: Props) {
-  const { range = 'monthly' } = await searchParams
-  const { data: analytics } = await getAnalyticsData({ range: range as AnalyticsRange })
+  const params = await searchParams
+  const range = (params.range as string) || 'monthly'
+  const startDate = params.startDate as string
+  const endDate = params.endDate as string
+
+  const { data: analytics } = await getAnalyticsData({ 
+    range: range as AnalyticsRange,
+    startDate,
+    endDate
+  })
 
   if (!analytics) return null
 

@@ -30,20 +30,34 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   let prevToDate: Date
 
   if (range === 'custom' && startDate && endDate) {
-    fromDate = new Date(startDate)
-    toDate = new Date(endDate)
-    const duration = toDate.getTime() - fromDate.getTime()
-    prevFromDate = new Date(fromDate.getTime() - duration)
-    prevToDate = new Date(fromDate.getTime() - 1)
+    try {
+      const s = new Date(startDate)
+      const e = new Date(endDate)
+      // Start of day (00:00:00 IST)
+      fromDate = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate()) - IST_OFFSET_MS)
+      // End of day (23:59:59 IST)
+      toDate = new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate(), 23, 59, 59, 999) - IST_OFFSET_MS)
+      
+      const duration = toDate.getTime() - fromDate.getTime()
+      prevFromDate = new Date(fromDate.getTime() - duration)
+      prevToDate = new Date(fromDate.getTime() - 1)
+    } catch (err) {
+      // Fallback if dates invalid
+      fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1) - IST_OFFSET_MS)
+      prevFromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth() - 1, 1) - IST_OFFSET_MS)
+      prevToDate = new Date(fromDate.getTime() - 1)
+    }
   } else if (range === 'daily') {
     fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate()) - IST_OFFSET_MS)
     prevFromDate = new Date(fromDate.getTime() - 24 * 60 * 60 * 1000)
     prevToDate = new Date(fromDate.getTime() - 1)
   } else if (range === 'weekly') {
-    // Week starts on Monday
-    const day = nowIST.getUTCDay()
-    const diff = nowIST.getUTCDate() - day + (day === 0 ? -6 : 1)
-    fromDate = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), diff) - IST_OFFSET_MS)
+    // Rolling 7-day range (today - 6 days)
+    const rollingStart = new Date(nowIST.getTime() - 6 * 24 * 60 * 60 * 1000)
+    // Start of day today-6 at 00:00:00 IST
+    fromDate = new Date(Date.UTC(rollingStart.getUTCFullYear(), rollingStart.getUTCMonth(), rollingStart.getUTCDate()) - IST_OFFSET_MS)
+    
+    // Comparison period: previous 7 days
     prevFromDate = new Date(fromDate.getTime() - 7 * 24 * 60 * 60 * 1000)
     prevToDate = new Date(fromDate.getTime() - 1)
   } else {
@@ -61,7 +75,7 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   ] = await Promise.all([
     supabase
       .from("transactions")
-      .select("amount, type, date, category_id, category:categories(name, color)")
+      .select("id, amount, type, date, category_id, category:categories(name, color)")
       .eq("user_id", user.id)
       .gte("date", prevFromDate.toISOString()),
     supabase
@@ -76,6 +90,14 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
 
   if (txError) return { error: txError.message, data: null }
 
+  // 🧪 TEMPORARY DEBUG LOGS
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[ANALYTICS DEBUG] Range: ${range}`);
+    console.log(`[ANALYTICS DEBUG] fromDate (UTC): ${fromDate.toISOString()}`);
+    console.log(`[ANALYTICS DEBUG] toDate (UTC): ${toDate.toISOString()}`);
+    console.log(`[ANALYTICS DEBUG] All Raw TX Found: ${transactions?.length || 0}`);
+  }
+
   // ── Processing ──────────────────────────────────────────────────────
   const currentPeriodTx = (transactions ?? []).filter(t => new Date(t.date) >= fromDate)
   const previousPeriodTx = (transactions ?? []).filter(t => {
@@ -83,11 +105,21 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
     return d >= prevFromDate && d <= prevToDate
   })
 
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[ANALYTICS DEBUG] Current Month TX: ${currentPeriodTx.length}`);
+  }
+
   // Basic Stats
   const currentExpenses = currentPeriodTx.filter(t => t.type === 'expense')
   const prevExpenses = previousPeriodTx.filter(t => t.type === 'expense')
 
   const totalSpent = currentExpenses.reduce((sum, t) => sum + Number(t.amount), 0)
+  
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[ANALYTICS DEBUG] Total Spent Computed: ₹${totalSpent}`);
+    console.log(`[ANALYTICS DEBUG] Current TX IDs: ${currentPeriodTx.map(t => t.id).join(', ')}`);
+  }
+
   const prevTotalSpent = prevExpenses.reduce((sum, t) => sum + Number(t.amount), 0)
   
   const pctChange = prevTotalSpent > 0 ? ((totalSpent - prevTotalSpent) / prevTotalSpent) * 100 : 0
@@ -99,7 +131,9 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   // Highest & Lowest Day (only if multiple days)
   const dailyMap: Record<string, number> = {}
   currentExpenses.forEach(t => {
-    const dStr = new Date(t.date).toISOString().split('T')[0]
+    // Group using IST date string to avoid date shifting
+    const tDateIST = new Date(new Date(t.date).getTime() + IST_OFFSET_MS)
+    const dStr = tDateIST.toISOString().split('T')[0] // This will be the IST date part
     dailyMap[dStr] = (dailyMap[dStr] || 0) + Number(t.amount)
   })
   const dailyAmounts = Object.values(dailyMap)
@@ -137,22 +171,29 @@ export async function getAnalyticsData(params: AnalyticsParams = {}) {
   } else if (range === 'weekly') {
     for (let i = 0; i < 7; i++) {
         const d = new Date(fromDate.getTime() + i * 24 * 60 * 60 * 1000)
-        const dStr = d.toISOString().split('T')[0]
+        // Group using IST date string to avoid date shifting
+        const dIST = new Date(d.getTime() + IST_OFFSET_MS)
+        const dStr = dIST.toISOString().split('T')[0]
         trendData.push({
             name: d.toLocaleDateString('en-IN', { weekday: 'short' }),
             total: dailyMap[dStr] || 0
         })
     }
   } else {
-    // monthly (Date 1 to end of month)
-    const tempDate = new Date(fromDate)
-    while (tempDate.getUTCMonth() === fromDate.getUTCMonth()) {
+    // monthly or custom (Date 1 to end of period)
+    const tempDate = new Date(fromDate.getTime() + IST_OFFSET_MS) // Start at early morning IST
+    const endBoundary = new Date(toDate.getTime() + IST_OFFSET_MS)
+    
+    while (tempDate <= endBoundary) {
       const dStr = tempDate.toISOString().split('T')[0]
       trendData.push({
         name: tempDate.getUTCDate().toString(),
         total: dailyMap[dStr] || 0
       })
       tempDate.setUTCDate(tempDate.getUTCDate() + 1)
+      
+      // Safety cap to avoid infinite loops on long ranges
+      if (trendData.length > 93) break; 
     }
   }
 
