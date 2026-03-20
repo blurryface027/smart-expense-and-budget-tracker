@@ -137,10 +137,12 @@ export function AddTransactionModal() {
       <Button
         type="button"
         size="sm"
-        className="w-full md:w-auto h-9"
+        className="flex-1 sm:flex-none h-9"
         onClick={() => setOpen(true)}
       >
-        <Plus className="mr-2 h-4 w-4" /> Add Transaction
+        <Plus className="h-4 w-4 sm:mr-2" />
+        <span className="hidden sm:inline">Add Transaction</span>
+        <span className="sm:hidden">Add</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

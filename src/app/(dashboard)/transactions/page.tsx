@@ -42,8 +42,10 @@ export default async function TransactionsPage({ searchParams }: Props) {
     <div className="flex-1 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Transactions</h2>
-        <div className="flex items-center gap-2">
-          <FilterBar categories={categories || []} />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex-1 sm:flex-none">
+            <FilterBar categories={categories || []} />
+          </div>
           <AddTransactionModal />
         </div>
       </div>

@@ -95,7 +95,7 @@ export function AddBudgetModal() {
         Set Budget Limit
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-full max-w-[425px] mx-auto">
+        <DialogContent className="w-full sm:max-w-[425px] mx-auto">
         <DialogHeader>
           <DialogTitle>Set Budget Limit</DialogTitle>
           <DialogDescription>
