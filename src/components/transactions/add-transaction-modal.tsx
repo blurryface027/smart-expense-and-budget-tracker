@@ -117,14 +117,16 @@ export function AddTransactionModal() {
     setLoading(false)
 
     if (result.error) {
-      toast.error(result.error, {
-        description: (result as any).budgetExceeded
-          ? "Adjust the amount or update your budget limit."
-          : undefined,
-        duration: 6000,
-      })
+      toast.error(result.error)
     } else {
-      toast.success("Transaction added successfully")
+      if (result.budgetWarning) {
+        toast.warning("Transaction added", {
+          description: result.budgetWarning,
+          duration: 6000
+        })
+      } else {
+        toast.success("Transaction added successfully")
+      }
       form.reset()
       setOpen(false)
       // Re-fetch budget status to reflect latest spend
@@ -366,16 +368,10 @@ export function AddTransactionModal() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading || alreadyOver || wouldExceed}
-                variant={alreadyOver || wouldExceed ? "outline" : "default"}
+                disabled={loading}
+                variant={alreadyOver || wouldExceed ? "destructive" : "default"}
               >
-                {loading
-                  ? "Adding..."
-                  : alreadyOver
-                  ? "Budget Limit Reached"
-                  : wouldExceed
-                  ? "Exceeds Budget Limit"
-                  : "Add Transaction"}
+                {loading ? "Adding..." : "Add Transaction"}
               </Button>
             </form>
           </Form>

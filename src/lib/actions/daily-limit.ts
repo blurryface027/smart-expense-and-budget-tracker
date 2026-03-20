@@ -28,50 +28,57 @@ export async function getDailySpendingLimit() {
     Date.UTC(currentYear, currentMonth, 1) - IST_OFFSET_MS
   ).toISOString()
 
-  // Fetch total budget (sum of all monthly limits)
-  const [{ data: budgets }, { data: transactions }] = await Promise.all([
-    supabase
-      .from("budgets")
-      .select("limit_amount")
-      .eq("user_id", user.id)
-      .eq("period", "monthly"),
-    supabase
-      .from("transactions")
-      .select("amount")
-      .eq("user_id", user.id)
-      .eq("type", "expense")
-      .gte("date", startOfMonth),
-  ])
+  // Fetch all transactions to calculate overall balance
+  const { data: allTransactions, error: txError } = await supabase
+    .from("transactions")
+    .select("amount, type, date")
+    .eq("user_id", user.id)
 
-  if (!budgets || budgets.length === 0) {
-    return { data: null, error: null } // No budgets set yet
+  if (txError) return { data: null, error: txError.message }
+
+  let totalIncome = 0
+  let totalExpenses = 0
+  let todaySpent = 0
+
+  const todayStartIST = new Date(Date.UTC(currentYear, currentMonth, todayDay) - IST_OFFSET_MS).getTime()
+  const todayEndIST = new Date(Date.UTC(currentYear, currentMonth, todayDay + 1) - IST_OFFSET_MS).getTime()
+
+  allTransactions?.forEach(t => {
+    const amt = Number(t.amount)
+    if (t.type === "income") {
+      totalIncome += amt
+    } else {
+      totalExpenses += amt
+      
+      // Calculate today's spending for the status bar
+      const tDate = new Date(t.date).getTime()
+      if (tDate >= todayStartIST && tDate < todayEndIST) {
+        todaySpent += amt
+      }
+    }
+  })
+
+  const remainingBalance = totalIncome - totalExpenses
+  const dailyLimit = remainingBalance > 0 ? remainingBalance / remainingDays : 0
+
+  // Safe Debug Logging (dev only)
+  if (process.env.NODE_ENV === "development") {
+    console.log({
+      income: totalIncome,
+      expenses: totalExpenses,
+      remainingBalance,
+      remainingDays,
+      dailyLimit
+    });
   }
 
-  const totalMonthlyBudget = budgets.reduce((sum, b) => sum + Number(b.limit_amount), 0)
-  const spentSoFar = (transactions ?? []).reduce((sum, t) => sum + Number(t.amount), 0)
-  const remainingBudget = Math.max(0, totalMonthlyBudget - spentSoFar)
-  const dailyLimit = remainingBudget / remainingDays
-
-  // Compute today's spending
-  const todayStartIST = new Date(Date.UTC(currentYear, currentMonth, todayDay) - IST_OFFSET_MS)
-  const todayEndIST = new Date(Date.UTC(currentYear, currentMonth, todayDay + 1) - IST_OFFSET_MS)
-
-  const { data: todayTransactions } = await supabase
-    .from("transactions")
-    .select("amount")
-    .eq("user_id", user.id)
-    .eq("type", "expense")
-    .gte("date", todayStartIST.toISOString())
-    .lt("date", todayEndIST.toISOString())
-
-  const todaySpent = (todayTransactions ?? []).reduce((sum, t) => sum + Number(t.amount), 0)
   const todayRemaining = Math.max(0, dailyLimit - todaySpent)
 
   // Status calculation
   let status: "safe" | "risky" | "overspent"
-  if (todaySpent > dailyLimit) {
+  if (todaySpent > dailyLimit && dailyLimit > 0) {
     status = "overspent"
-  } else if (todaySpent >= dailyLimit * 0.75) {
+  } else if (dailyLimit > 0 && todaySpent >= dailyLimit * 0.75) {
     status = "risky"
   } else {
     status = "safe"
@@ -82,9 +89,9 @@ export async function getDailySpendingLimit() {
       dailyLimit,
       todaySpent,
       todayRemaining,
-      spentSoFar,
-      totalMonthlyBudget,
-      remainingBudget,
+      spentSoFar: totalExpenses, // Backward compatibility: using total expenses
+      totalMonthlyBudget: totalIncome, // Backward compatibility: using total income
+      remainingBudget: remainingBalance, // Backward compatibility: using total balance
       remainingDays,
       status,
     },

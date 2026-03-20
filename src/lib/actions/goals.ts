@@ -75,6 +75,11 @@ export async function getGoals() {
   const now = new Date()
   const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
   const nowIST = new Date(now.getTime() + IST_OFFSET_MS)
+  
+  // Get daily limit for financial reality check
+  const { getDailySpendingLimit } = await import("@/lib/actions/daily-limit")
+  const { data: limitData } = await getDailySpendingLimit()
+  const userDailyLimit = limitData?.dailyLimit || 0
 
   const processedGoals = (goals ?? []).map(goal => {
     const target = Number(goal.target_amount)
@@ -86,32 +91,84 @@ export async function getGoals() {
     // -- Time Calculations --
     let daysRemaining = 0
     let monthsRemaining = 0
-    if (deadline && deadline > nowIST) {
-      const diffMs = deadline.getTime() - nowIST.getTime()
-      daysRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-      monthsRemaining = Math.max(1, Math.ceil(daysRemaining / 30.44))
+    if (deadline) {
+      if (deadline > nowIST) {
+        const diffMs = deadline.getTime() - nowIST.getTime()
+        daysRemaining = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+        monthsRemaining = Math.max(1, Math.ceil(daysRemaining / 30.44))
+      } else {
+        // Past deadline
+        daysRemaining = 0
+        monthsRemaining = 0
+      }
     }
 
     // -- Required Savings --
-    const requiredDaily = daysRemaining > 0 ? remaining / daysRemaining : null
-    const requiredMonthly = monthsRemaining > 0 ? remaining / monthsRemaining : null
+    let requiredDaily = 0
+    let requiredMonthly = 0
 
-    // -- Pace Calculation --
-    // Progress so far vs Time elapsed so far
-    const totalDuration = deadline ? (deadline.getTime() - createdDate.getTime()) : null
-    const elapsed = nowIST.getTime() - createdDate.getTime()
-    
+    if (remaining > 0) {
+      if (deadline && deadline <= nowIST) {
+        // Already past or exactly on deadline but not reached
+        requiredDaily = 0
+        requiredMonthly = 0
+      } else if (daysRemaining > 0) {
+        requiredDaily = remaining / daysRemaining
+        requiredMonthly = monthsRemaining > 0 ? remaining / monthsRemaining : 0
+      }
+    }
+
+    // -- Pace Calculation (Time-Based) --
     let pace: "ahead" | "behind" | "on-track" = "on-track"
     let behindAmount = 0
     
-    if (totalDuration && totalDuration > 0) {
-      const expectedProgress = (elapsed / totalDuration) * target
-      if (current < expectedProgress * 0.9) {
-        pace = "behind"
-        behindAmount = expectedProgress - current
-      } else if (current > expectedProgress * 1.1) {
-        pace = "ahead"
+    if (deadline) {
+      const totalDurationMs = deadline.getTime() - createdDate.getTime()
+      const totalDurationDays = Math.max(1, Math.ceil(totalDurationMs / (1000 * 60 * 60 * 24)))
+      const elapsedMs = nowIST.getTime() - createdDate.getTime()
+      const elapsedDays = Math.max(0, Math.ceil(elapsedMs / (1000 * 60 * 60 * 24)))
+
+      if (deadline <= nowIST) {
+        // Goal finished or expired
+        if (current < target) {
+          pace = "behind"
+          behindAmount = target - current
+        } else {
+          pace = "ahead"
+          behindAmount = 0
+        }
+      } else {
+        const expectedSavings = (target / totalDurationDays) * elapsedDays
+        behindAmount = Math.max(0, expectedSavings - current)
+
+        if (behindAmount > expectedSavings * 0.1) {
+          pace = "behind"
+        } else if (current > expectedSavings * 1.1) {
+          pace = "ahead"
+        } else {
+          pace = "on-track"
+        }
       }
+      
+      // Safe Debug Logging (Dev Only)
+      if (process.env.NODE_ENV === "development") {
+        console.log({
+          goal: goal.title,
+          target,
+          actualSaved: current,
+          remaining,
+          daysRemaining,
+          requiredDaily,
+          requiredMonthly,
+          behindAmount
+        });
+      }
+    }
+
+    // -- Financial Reality Check (Soft Logic) --
+    let flagGoalAsAggressive = false
+    if (requiredDaily > userDailyLimit && userDailyLimit > 0) {
+      flagGoalAsAggressive = true
     }
 
     // -- Health Score --
@@ -125,20 +182,24 @@ export async function getGoals() {
 
     // -- Intelligence & Suggestions --
     const suggestions: string[] = []
-    if (requiredDaily && requiredDaily > 0) {
+    if (requiredDaily > 0) {
       if (pace === "behind") {
-        suggestions.push(`Save ₹${Math.round(requiredDaily)}/day to stay on track`)
+        suggestions.push(`Save ₹${Math.round(requiredDaily)}/day to catch up`)
       } else {
         suggestions.push(`Save ₹${Math.round(requiredDaily)}/day to reach your goal on time`)
       }
     }
     
+    if (flagGoalAsAggressive) {
+      suggestions.push("This goal is aggressive compared to your daily limit.")
+    }
+
     // Auto Recommendation from top categories
     if (topCategories.length > 0 && remaining > 0) {
       const topCat = topCategories[0]
       const suggestedCut = Math.min(topCat.total * 0.1, remaining)
       if (suggestedCut > 100) {
-        suggestions.push(`Reduce ${topCat.name} spending by ₹${Math.round(suggestedCut)}/mo to fund this goal`)
+        suggestions.push(`Reducing ${topCat.name} spend can help hit this goal.`)
       }
     }
 
@@ -147,14 +208,14 @@ export async function getGoals() {
       "Save spare change from daily budget",
       "Use weekend savings for this goal",
       "Skip 1 luxury meal = ₹500 saved",
-      "Skip a subscription to save and reach goal faster"
+      "One fewer small purchase per week adds up!"
     ]
     const randomTip = tips[Math.floor(Math.random() * tips.length)]
 
     // Risk detection
     let riskMessage = ""
     if (pace === "behind" && deadline) {
-       riskMessage = "At current pace, you might miss this goal."
+       riskMessage = deadline < nowIST ? "This goal has passed its deadline." : "Might miss target based on current timeline."
     }
 
     return {
@@ -170,7 +231,8 @@ export async function getGoals() {
         health,
         suggestions,
         randomTip,
-        riskMessage
+        riskMessage,
+        flagGoalAsAggressive
       }
     }
   })

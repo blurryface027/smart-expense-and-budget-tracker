@@ -152,7 +152,14 @@ export function QuickAddFAB() {
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success("Expense added!", { description: `₹${amt.toLocaleString("en-IN")} recorded` })
+      if (result.budgetWarning) {
+        toast.warning("Expense added!", { 
+          description: result.budgetWarning,
+          duration: 6000
+        })
+      } else {
+        toast.success("Expense added!", { description: `₹${amt.toLocaleString("en-IN")} recorded` })
+      }
       reset()
       setOpen(false)
     }
@@ -296,7 +303,7 @@ export function QuickAddFAB() {
               <Button
                 type="submit"
                 className="w-full h-9"
-                disabled={loading || (budgetInfo?.isOver ?? false)}
+                disabled={loading}
               >
                 {loading ? "Adding..." : "Add Expense"}
                 {!loading && <ChevronRight className="h-4 w-4 ml-1" />}

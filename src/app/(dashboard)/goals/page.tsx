@@ -104,13 +104,13 @@ export default async function GoalsPage() {
                     <div className="bg-muted/30 rounded-lg p-2">
                        <p className="text-[10px] text-muted-foreground uppercase font-medium">Daily Need</p>
                        <p className="text-sm font-bold">
-                         {smartData.requiredDaily ? `₹${Math.round(smartData.requiredDaily).toLocaleString()}` : "N/A"}
+                         {smartData.remaining > 0 ? `₹${Math.round(smartData.requiredDaily).toLocaleString()}` : "₹0"}
                        </p>
                     </div>
                     <div className="bg-muted/30 rounded-lg p-2">
                        <p className="text-[10px] text-muted-foreground uppercase font-medium">Monthly Need</p>
                        <p className="text-sm font-bold">
-                         {smartData.requiredMonthly ? `₹${Math.round(smartData.requiredMonthly).toLocaleString()}` : "N/A"}
+                         {smartData.remaining > 0 ? `₹${Math.round(smartData.requiredMonthly).toLocaleString()}` : "₹0"}
                        </p>
                     </div>
                   </div>

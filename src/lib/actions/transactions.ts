@@ -20,7 +20,8 @@ export async function addTransaction(data: TransactionFormValues) {
     return { error: "Not authenticated" }
   }
 
-  // ── Budget enforcement (expenses only) ─────────────────────────────────
+  // ── Budget evaluation (soft warning) ─────────────────────────────────
+  let budgetWarning: string | undefined = undefined
   if (parsed.data.type === "expense") {
     const now = new Date()
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
@@ -47,11 +48,7 @@ export async function addTransaction(data: TransactionFormValues) {
       const newTotal = spent + parsed.data.amount
 
       if (newTotal > budget.limit_amount) {
-        const remaining = Math.max(0, budget.limit_amount - spent)
-        return {
-          error: `Budget limit exceeded. You can only spend ₹${remaining.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} more in this category this month.`,
-          budgetExceeded: true,
-        }
+        budgetWarning = `You've exceeded your budget for this category.`
       }
     }
   }
@@ -71,7 +68,7 @@ export async function addTransaction(data: TransactionFormValues) {
 
   revalidatePath("/")
   revalidatePath("/transactions")
-  return { success: true }
+  return { success: true, budgetWarning }
 }
 
 export async function getCategories() {
