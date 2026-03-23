@@ -10,8 +10,30 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import * as LucideIcons from "lucide-react"
-import { HeartCrack, Repeat, TrendingUp, Sparkles, MessageSquare, AlertCircle } from "lucide-react"
+import { HeartCrack, Repeat, TrendingUp, Sparkles, MessageSquare, AlertCircle, MoreHorizontal, Pencil, Trash } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { useState } from "react"
+import { EditTransactionModal } from "./edit-transaction-modal"
+import { deleteTransaction } from "@/lib/actions/transactions"
+import { toast } from "sonner"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 type Transaction = {
   id: string
@@ -28,6 +50,7 @@ type Transaction = {
     icon: string
     color: string
   } | null
+  category_id: string
   flags?: string[]
 }
 
@@ -44,6 +67,10 @@ const DynamicIcon = ({ name, className }: { name?: string, className?: string })
 }
 
 export function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [deletingTransactionId, setDeletingTransactionId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   if (transactions.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center text-muted-foreground border border-dashed rounded-lg">
@@ -52,8 +79,24 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
     )
   }
 
+  const handleDelete = async () => {
+    if (!deletingTransactionId) return
+    
+    setIsDeleting(true)
+    const result = await deleteTransaction(deletingTransactionId)
+    setIsDeleting(false)
+    
+    if (result.success) {
+      toast.success("Transaction deleted")
+      setDeletingTransactionId(null)
+    } else {
+      toast.error(result.error || "Failed to delete transaction")
+    }
+  }
+
   return (
-    <div className="rounded-md border overflow-x-auto">
+    <>
+      <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -61,6 +104,7 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
             <TableHead>Date</TableHead>
             <TableHead className="hidden md:table-cell">Notes & Insights</TableHead>
             <TableHead className="text-right">Amount</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -147,11 +191,62 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                     )}
                   </div>
                 </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setEditingTransaction(transaction)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-rose-600 focus:text-rose-600" 
+                          onClick={() => setDeletingTransactionId(transaction.id)}
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
               </TableRow>
              )
           })}
         </TableBody>
       </Table>
     </div>
+      
+      {editingTransaction && (
+        <EditTransactionModal 
+          transaction={editingTransaction}
+          open={!!editingTransaction}
+          onOpenChange={(open) => !open && setEditingTransaction(null)}
+        />
+      )}
+
+      <Dialog open={!!deletingTransactionId} onOpenChange={(open) => !open && setDeletingTransactionId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the transaction.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingTransactionId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

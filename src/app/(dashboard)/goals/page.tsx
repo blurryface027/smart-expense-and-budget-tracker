@@ -9,9 +9,10 @@ import { getGoals } from "@/lib/actions/goals"
 import { AddGoalModal } from "@/components/goals/add-goal-modal"
 import { Progress } from "@/components/ui/progress"
 import { format } from "date-fns"
-import { Target, TrendingUp, TrendingDown, Star, AlertCircle, Lightbulb } from "lucide-react"
+import { Target, TrendingUp, TrendingDown, Star, AlertCircle, Lightbulb, MoreHorizontal } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { GoalActions } from "@/components/goals/goal-actions"
 
 export default async function GoalsPage() {
   const { data: goals, error } = await getGoals()
@@ -61,9 +62,12 @@ export default async function GoalsPage() {
                       </div>
                       <CardTitle className="text-base truncate">{goal.title}</CardTitle>
                     </div>
-                    <Badge variant="outline" className={cn("text-[10px] uppercase font-bold px-1.5 py-0 h-5", health.class)}>
-                      {health.label}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                       <Badge variant="outline" className={cn("text-[10px] uppercase font-bold px-1.5 py-0 h-5", health.class)}>
+                         {health.label}
+                       </Badge>
+                       <GoalActions goal={goal} />
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4 flex-1 flex flex-col">

@@ -71,6 +71,69 @@ export async function addTransaction(data: TransactionFormValues) {
   return { success: true, budgetWarning }
 }
 
+export async function updateTransaction(id: string, data: TransactionFormValues) {
+  const supabase = await createClient()
+
+  const parsed = transactionSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: "Invalid form data" }
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: "Not authenticated" }
+  }
+
+  const { error } = await supabase
+    .from("transactions")
+    .update({
+      amount: parsed.data.amount,
+      type: parsed.data.type,
+      category_id: parsed.data.categoryId,
+      date: parsed.data.date.toISOString(),
+      notes: parsed.data.notes,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/")
+  revalidatePath("/transactions")
+  return { success: true }
+}
+
+export async function deleteTransaction(id: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: "Not authenticated" }
+  }
+
+  const { error } = await supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/")
+  revalidatePath("/transactions")
+  return { success: true }
+}
+
 export async function getCategories() {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -126,9 +189,23 @@ export async function getTransactions(filters: TransactionFilter = {}) {
     query = query.lte("date", filters.endDate)
   }
 
+  // Debug Logging (Temporary)
+  console.log("[DEBUG] getTransactions filters:", {
+    type: filters.type,
+    categoryIds: filters.categoryIds,
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    search: filters.search
+  })
+
   let { data: transactions, error } = await query
 
-  if (error) return { error: error.message, data: null }
+  if (error) {
+    console.error("[DEBUG] getTransactions error:", error)
+    return { error: error.message, data: null }
+  }
+
+  console.log("[DEBUG] getTransactions results count:", transactions?.length || 0)
 
   // ── Client-side search (for notes and category name) ───────────────────
   if (filters.search) {

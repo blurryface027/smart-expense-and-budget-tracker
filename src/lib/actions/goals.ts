@@ -35,6 +35,65 @@ export async function addGoal(data: GoalFormValues) {
   return { success: true }
 }
 
+export async function updateGoal(id: string, data: GoalFormValues) {
+  const supabase = await createClient()
+
+  const parsed = goalSchema.safeParse(data)
+  if (!parsed.success) {
+    return { error: "Invalid form data" }
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: "Not authenticated" }
+  }
+
+  const { error } = await supabase
+    .from("goals")
+    .update({
+      title: parsed.data.title,
+      target_amount: parsed.data.targetAmount,
+      deadline: parsed.data.deadline ? parsed.data.deadline.toISOString() : null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/goals")
+  return { success: true }
+}
+
+export async function deleteGoal(id: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: "Not authenticated" }
+  }
+
+  const { error } = await supabase
+    .from("goals")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/goals")
+  return { success: true }
+}
+
 export async function getGoals() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

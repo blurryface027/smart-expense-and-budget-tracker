@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { subDays, startOfMonth, endOfMonth } from "date-fns"
+import { subDays, startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns"
 import { Filter, X, Calendar as CalendarIcon, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -73,11 +73,11 @@ export function FilterBar({ categories }: FilterBarProps) {
     const today = new Date()
 
     if (preset === "today") {
-      start = today
-      end = today
+      start = startOfDay(today)
+      end = endOfDay(today)
     } else if (preset === "7days") {
-      start = subDays(today, 7)
-      end = today
+      start = startOfDay(subDays(today, 7))
+      end = endOfDay(today)
     } else if (preset === "month") {
       start = startOfMonth(today)
       end = endOfMonth(today)
